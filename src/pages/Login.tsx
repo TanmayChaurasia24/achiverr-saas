@@ -5,13 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Github, Mail, LogIn } from 'lucide-react';
+import { Github, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Login = () => {
   const { user, isLoading, signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const error = searchParams.get('error');
+  
+  // Check if we're using fallback Supabase credentials
+  const usingFallbackCredentials = 
+    import.meta.env.VITE_SUPABASE_URL === undefined || 
+    import.meta.env.VITE_SUPABASE_ANON_KEY === undefined;
   
   useEffect(() => {
     // If user is already logged in, redirect to home
@@ -45,11 +51,23 @@ const Login = () => {
           <p className="text-muted-foreground">Sign in to track your goals and progress</p>
         </div>
         
+        {usingFallbackCredentials && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Configuration Required</AlertTitle>
+            <AlertDescription>
+              Supabase credentials are not configured. Please set the VITE_SUPABASE_URL and 
+              VITE_SUPABASE_ANON_KEY environment variables for authentication to work.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="space-y-4">
           <Button 
             variant="outline" 
             className="w-full flex items-center justify-center gap-2"
             onClick={() => signIn.withGoogle()}
+            disabled={usingFallbackCredentials}
           >
             <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -64,10 +82,17 @@ const Login = () => {
             variant="outline" 
             className="w-full"
             onClick={() => signIn.withGithub()}
+            disabled={usingFallbackCredentials}
           >
             <Github className="mr-2 h-4 w-4" />
             Continue with GitHub
           </Button>
+          
+          {usingFallbackCredentials && (
+            <p className="text-sm text-muted-foreground mt-4 text-center">
+              Authentication is disabled until Supabase is properly configured.
+            </p>
+          )}
         </div>
       </div>
     </Layout>
