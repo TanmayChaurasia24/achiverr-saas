@@ -60,27 +60,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 container py-6">{children}</main>
-        <footer className="border-t py-6 bg-background">
-          <div className="container flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
-            <div className="mb-4 md:mb-0">
-              Made with precision and simplicity in mind.
-            </div>
-            <div className="flex gap-6">
-              <Link to="/" className="hover:text-foreground transition-colors">
-                Home
-              </Link>
-              <Link to="/pricing" className="hover:text-foreground transition-colors">
-                Pricing
-              </Link>
-              <a href="#" className="hover:text-foreground transition-colors">
-                Terms
-              </a>
-              <a href="#" className="hover:text-foreground transition-colors">
-                Privacy
-              </a>
-            </div>
-          </div>
-        </footer>
       </div>
     </ThemeProvider>
   );

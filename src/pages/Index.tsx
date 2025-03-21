@@ -113,7 +113,7 @@ const Index = () => {
           <div className="flex justify-between items-center mb-4">
             <TabsList>
               <TabsTrigger value="current">Current Goals</TabsTrigger>
-              <TabsTrigger value="completed" disabled={true}>Completed</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
             </TabsList>
           </div>
           
