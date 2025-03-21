@@ -1,11 +1,11 @@
 
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Github, AlertTriangle } from 'lucide-react';
+import { Github, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Login = () => {
@@ -20,9 +20,9 @@ const Login = () => {
     import.meta.env.VITE_SUPABASE_ANON_KEY === undefined;
   
   useEffect(() => {
-    // If user is already logged in, redirect to home
+    // If user is already logged in, redirect to dashboard
     if (user && !isLoading) {
-      navigate('/');
+      navigate('/dashboard');
     }
     
     // Show error toast if there was an auth error
@@ -45,7 +45,7 @@ const Login = () => {
   
   return (
     <Layout>
-      <div className="max-w-md mx-auto mt-10 p-6 border rounded-lg shadow-sm">
+      <div className="max-w-md mx-auto mt-10 p-8 border rounded-xl shadow-sm bg-card">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold tracking-tight mb-2">Welcome to DreamPlan</h1>
           <p className="text-muted-foreground">Sign in to track your goals and progress</p>
@@ -65,7 +65,7 @@ const Login = () => {
         <div className="space-y-4">
           <Button 
             variant="outline" 
-            className="w-full flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-center gap-2 h-12"
             onClick={() => signIn.withGoogle()}
             disabled={usingFallbackCredentials}
           >
@@ -80,11 +80,11 @@ const Login = () => {
           
           <Button 
             variant="outline" 
-            className="w-full"
+            className="w-full h-12"
             onClick={() => signIn.withGithub()}
             disabled={usingFallbackCredentials}
           >
-            <Github className="mr-2 h-4 w-4" />
+            <Github className="mr-2 h-5 w-5" />
             Continue with GitHub
           </Button>
           
@@ -93,6 +93,15 @@ const Login = () => {
               Authentication is disabled until Supabase is properly configured.
             </p>
           )}
+          
+          <div className="mt-6 text-center">
+            <Button variant="link" asChild className="text-sm">
+              <Link to="/" className="flex items-center justify-center">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to Home
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </Layout>

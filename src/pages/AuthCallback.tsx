@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Layout } from '@/components/Layout';
+import { Loader2 } from 'lucide-react';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -15,8 +16,8 @@ const AuthCallback = () => {
         console.error('Error during auth callback:', error);
         navigate('/login?error=auth-failed');
       } else {
-        // Successful authentication
-        navigate('/');
+        // Successful authentication - redirect to dashboard
+        navigate('/dashboard');
       }
     };
 
@@ -25,8 +26,9 @@ const AuthCallback = () => {
 
   return (
     <Layout>
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="animate-pulse text-muted-foreground">
+      <div className="flex flex-col items-center justify-center h-[60vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-accent mb-4" />
+        <div className="text-lg text-foreground">
           Completing login process...
         </div>
       </div>
