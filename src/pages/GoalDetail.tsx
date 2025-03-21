@@ -88,7 +88,7 @@ const GoalDetail = () => {
   }
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-6 animate-slide-up p-8">
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"

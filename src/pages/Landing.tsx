@@ -29,12 +29,15 @@ const Landing = () => {
       {/* Hero Section */}
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="text-xl font-semibold tracking-tight">
-          DreamPlan Navigator
+          Achiverr
         </div>
         <div className="flex items-center gap-4">
           <Link to="/pricing" className="text-sm font-medium hover:text-primary">
             Pricing
           </Link>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/dashboard">Dashboard</Link>
+          </Button>
           <Button asChild variant="outline" size="sm">
             <Link to="/login">Sign In</Link>
           </Button>
@@ -137,7 +140,7 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-xl font-semibold mb-4 md:mb-0">
-              DreamPlan Navigator
+              Achiverr
             </div>
             <div className="flex gap-8 text-sm text-muted-foreground">
               <Link to="/pricing" className="hover:text-foreground">
@@ -152,7 +155,7 @@ const Landing = () => {
             </div>
           </div>
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} DreamPlan Navigator. All rights reserved.
+            © {new Date().getFullYear()} Achiverr. All rights reserved.
           </div>
         </div>
       </footer>

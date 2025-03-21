@@ -46,17 +46,13 @@ const PublicRoutes = () => {
               <Route 
                 path="/dashboard" 
                 element={
-                  <ProtectedRoute>
                     <Index />
-                  </ProtectedRoute>
                 } 
               />
               <Route 
                 path="/goals/:id" 
                 element={
-                  <ProtectedRoute>
                     <GoalDetail />
-                  </ProtectedRoute>
                 } 
               />
               <Route path="*" element={<NotFound />} />

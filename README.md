@@ -1,9 +1,9 @@
 
-# DreamPlan Navigator
+# Achiverr
 
-DreamPlan Navigator is a goal-setting and tracking application that helps users turn their dreams into actionable plans using AI-powered roadmaps. The application combines modern UI design with intelligent planning functionality.
+Achiverr is a goal-setting and tracking application that helps users turn their dreams into actionable plans using AI-powered roadmaps. The application combines modern UI design with intelligent planning functionality.
 
-![DreamPlan Navigator](https://example.com/dreamplan-screenshot.png)
+![Achiverr](https://example.com/dreamplan-screenshot.png)
 
 ## Features
 
@@ -117,7 +117,7 @@ Dashboard → View Suggestions → Add Suggested Goal → Goal Added with Pre-de
 git clone <repository-url>
 
 # Navigate to the project directory
-cd dreamplan-navigator
+cd Achiverr
 
 # Install dependencies
 npm install

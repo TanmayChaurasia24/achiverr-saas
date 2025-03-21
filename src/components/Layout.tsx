@@ -23,7 +23,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {!isPublicPage && user && (
                 <LayoutDashboard className="mr-2 h-5 w-5 text-accent" />
               )}
-              DreamPlan Navigator
+              Achiverr
             </Link>
             <div className="flex items-center gap-3">
               {/* Dashboard Link - appears on all pages when user is logged in */}
