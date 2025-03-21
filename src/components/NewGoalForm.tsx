@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -35,6 +34,9 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         parseInt(timeframe)
       );
       
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + parseInt(timeframe));
+      
       const newGoal: Goal = {
         id: crypto.randomUUID(),
         title,
@@ -43,12 +45,12 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         createdAt: new Date().toISOString(),
         roadmap,
         progress: 0,
-        tasks: []
+        tasks: [],
+        deadline: deadline.toISOString().split('T')[0]
       };
       
       saveGoal(newGoal);
       
-      // Reset form
       setTitle("");
       setDescription("");
       setTimeframe("30");
