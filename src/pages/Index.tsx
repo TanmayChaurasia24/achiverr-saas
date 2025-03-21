@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { AIGoalSuggestions } from "@/components/AIGoalSuggestions";
 import { BarChart3, TrendingUp, ListChecks, Calendar, PlusCircle } from "lucide-react";
 
 const Index = () => {
@@ -104,6 +105,9 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* AI Goal Suggestions - Unique Feature */}
+        <AIGoalSuggestions onGoalAdded={loadGoals} />
         
         <Tabs defaultValue="current" className="w-full">
           <div className="flex justify-between items-center mb-4">

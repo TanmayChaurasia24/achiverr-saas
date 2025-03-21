@@ -5,7 +5,7 @@ import { UserProfile } from "@/components/UserProfile";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LogIn, LayoutDashboard, BarChart3 } from "lucide-react";
+import { LogIn, LayoutDashboard, BarChart3, Sparkle } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -26,6 +26,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
               DreamPlan Navigator
             </Link>
             <div className="flex items-center gap-3">
+              {/* Direct Dashboard Link - appears on all pages and is highlighted */}
+              {user && (
+                <Button variant="outline" size="sm" asChild className="text-sm border-accent text-accent hover:bg-accent/10 hidden md:flex">
+                  <Link to="/dashboard">
+                    <Sparkle className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </Button>
+              )}
+              
               {!isPublicPage && (
                 <Button variant="ghost" size="sm" asChild className="text-sm hidden md:flex">
                   <Link to="/pricing">
