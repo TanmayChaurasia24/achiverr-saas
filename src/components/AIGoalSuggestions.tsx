@@ -65,9 +65,18 @@ export function AIGoalSuggestions({ onGoalAdded }: { onGoalAdded: () => void }) 
       title: suggestion.title,
       description: suggestion.description,
       deadline: suggestion.deadline,
+      timeframe: 30, // Default timeframe in days
+      createdAt: new Date().toISOString(),
+      roadmap: [],
       progress: 0,
-      tasks: suggestion.tasks,
-      created: new Date().toISOString()
+      tasks: suggestion.tasks.map((task: any) => ({
+        id: task.id,
+        goalId: crypto.randomUUID(), // This will be updated after goal creation
+        description: task.title,
+        day: 1, // Default day
+        completed: false,
+        createdAt: new Date().toISOString()
+      }))
     };
 
     saveGoal(newGoal);

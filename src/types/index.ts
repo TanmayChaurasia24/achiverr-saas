@@ -8,6 +8,7 @@ export interface Goal {
   roadmap: RoadmapItem[];
   progress: number; // 0-100
   tasks: Task[];
+  deadline: string; // Added deadline property
 }
 
 export interface RoadmapItem {
