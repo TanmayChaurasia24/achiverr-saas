@@ -26,9 +26,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               DreamPlan Navigator
             </Link>
             <div className="flex items-center gap-3">
-              {/* Direct Dashboard Link - appears on all pages and is highlighted */}
+              {/* Dashboard Link - appears on all pages when user is logged in */}
               {user && (
-                <Button variant="outline" size="sm" asChild className="text-sm border-accent text-accent hover:bg-accent/10 hidden md:flex">
+                <Button variant="outline" size="sm" asChild className="text-sm">
                   <Link to="/dashboard">
                     <Sparkle className="mr-2 h-4 w-4" />
                     Dashboard
