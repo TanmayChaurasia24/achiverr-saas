@@ -12,58 +12,32 @@ import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
-import { useAuth } from "@/hooks/useAuth";
 
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading } = useAuth();
-  
-  if (isLoading) return null; // Or a loading spinner
-  
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Public routes are accessible without login
-const PublicRoutes = () => {
+// App component with auth provider wrapped around routes
+const App = () => {
   const queryClient = new QueryClient();
   
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner position="top-center" />
+      <TooltipProvider>
+        <Toaster />
+        <Sonner position="top-center" />
+        <AuthProvider>
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                    <Index />
-                } 
-              />
-              <Route 
-                path="/goals/:id" 
-                element={
-                    <GoalDetail />
-                } 
-              />
+              <Route path="/dashboard" element={<Index />} />
+              <Route path="/goals/:id" element={<GoalDetail />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 };
-
-const App = () => <PublicRoutes />;
 
 export default App;
