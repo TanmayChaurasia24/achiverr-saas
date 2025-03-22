@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { generateRoadmap } from "@/utils/api";
-import { Goal } from "@/types";
-import { saveGoal } from "@/utils/storage";
+import { createGoal, createRoadmapItems } from "@/utils/supabaseHelpers";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NewGoalFormProps {
   onGoalCreated: () => void;
@@ -19,6 +21,7 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [timeframe, setTimeframe] = useState("30");
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +31,13 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
     setLoading(true);
     
     try {
+      if (!user) {
+        toast.error("You must be logged in to create a goal");
+        setLoading(false);
+        return;
+      }
+
+      // Generate roadmap using AI
       const roadmap = await generateRoadmap(
         title,
         description,
@@ -37,19 +47,22 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
       const deadline = new Date();
       deadline.setDate(deadline.getDate() + parseInt(timeframe));
       
-      const newGoal: Goal = {
-        id: crypto.randomUUID(),
+      // Create goal in Supabase
+      const newGoal = await createGoal({
         title,
         description,
         timeframe: parseInt(timeframe),
-        createdAt: new Date().toISOString(),
-        roadmap,
-        progress: 0,
-        tasks: [],
-        deadline: deadline.toISOString().split('T')[0]
-      };
+        deadline: deadline.toISOString(),
+        roadmap: [],
+        tasks: []
+      });
       
-      saveGoal(newGoal);
+      // Create roadmap items in Supabase
+      if (newGoal && roadmap.length > 0) {
+        await createRoadmapItems(newGoal.id, roadmap);
+      }
+      
+      toast.success("Goal created successfully!");
       
       setTitle("");
       setDescription("");
@@ -58,6 +71,7 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
       onGoalCreated();
     } catch (error) {
       console.error("Error creating goal:", error);
+      toast.error("Failed to create goal. Please try again.");
     } finally {
       setLoading(false);
     }

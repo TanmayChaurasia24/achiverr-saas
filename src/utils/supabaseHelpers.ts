@@ -33,6 +33,13 @@ export const fetchGoalById = async (id: string) => {
 };
 
 export const createGoal = async (goal: Omit<Goal, 'id' | 'createdAt' | 'progress'>) => {
+  // Get the current authenticated user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be authenticated to create a goal');
+  }
+  
   const { data, error } = await supabase
     .from('goals')
     .insert({
@@ -40,6 +47,7 @@ export const createGoal = async (goal: Omit<Goal, 'id' | 'createdAt' | 'progress
       description: goal.description,
       timeframe: goal.timeframe,
       deadline: goal.deadline,
+      user_id: user.id  // Add the user_id from the authenticated user
     })
     .select()
     .single();
