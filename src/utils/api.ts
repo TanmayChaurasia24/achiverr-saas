@@ -2,6 +2,7 @@ import { Goal, RoadmapItem, Task } from "@/types";
 
 const apikey = "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";
 
+
 export const generateRoadmap = async (
   goalTitle: string,
   goalDescription: string,
