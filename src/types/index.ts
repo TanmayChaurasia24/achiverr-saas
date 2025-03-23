@@ -16,6 +16,8 @@ export interface RoadmapItem {
   timePeriod: string;
   tasks: string[];
   completed: boolean;
+  day?: number; // Added day property that's used in supabaseHelpers.ts
+  description?: string; // Added description property that's used in supabaseHelpers.ts
 }
 
 export interface Task {

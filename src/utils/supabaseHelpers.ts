@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Goal, RoadmapItem, Task } from "@/types";
 
@@ -109,8 +108,8 @@ export const fetchRoadmapItems = async (goalId: string) => {
 export const createRoadmapItems = async (goalId: string, items: Omit<RoadmapItem, 'id' | 'goalId'>[]) => {
   const roadmapItems = items.map(item => ({
     goal_id: goalId,
-    day: item.day,
-    description: item.description,
+    day: item.day || 1, // Provide default value if day is not specified
+    description: item.description || item.timePeriod, // Use timePeriod as description if description is not specified
     completed: item.completed || false
   }));
   
