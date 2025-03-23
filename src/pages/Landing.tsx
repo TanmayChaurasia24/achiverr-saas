@@ -226,7 +226,6 @@ const Landing = () => {
               initial="rest"
               animate="rest"
               whileTap="rest"
-              variants={cardHover}
               className="bg-card border rounded-lg p-6 transition-all"
             >
               <motion.div
@@ -247,7 +246,6 @@ const Landing = () => {
               initial="rest"
               animate="rest"
               whileTap="rest"
-              variants={cardHover}
               className="bg-card border rounded-lg p-6 transition-all"
             >
               <motion.div
@@ -274,7 +272,6 @@ const Landing = () => {
               initial="rest"
               animate="rest"
               whileTap="rest"
-              variants={cardHover}
               className="bg-card border rounded-lg p-6 transition-all"
             >
               <motion.div
