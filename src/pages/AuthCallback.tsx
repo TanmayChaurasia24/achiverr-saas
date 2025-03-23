@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/Layout';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -23,14 +24,14 @@ const AuthCallback = () => {
           toast.success('Successfully signed in!');
           navigate('/dashboard');
         } else {
-          // No session found
-          toast.error('Authentication failed. Please try again.');
-          navigate('/login?error=no-session');
+          // No session found - still redirect to dashboard since we want pages to be accessible without login
+          navigate('/dashboard');
         }
       } catch (error) {
         console.error('Unexpected error during auth:', error);
         toast.error('An unexpected error occurred during authentication.');
-        navigate('/login?error=unexpected');
+        // Even in case of error, still redirect to dashboard
+        navigate('/dashboard');
       }
     };
 
@@ -39,12 +40,33 @@ const AuthCallback = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-center h-[60vh]">
-        <Loader2 className="h-10 w-10 animate-spin text-accent mb-4" />
-        <div className="text-lg text-foreground">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center justify-center h-[60vh]"
+      >
+        <motion.div
+          animate={{ 
+            rotate: 360,
+          }}
+          transition={{ 
+            repeat: Infinity, 
+            duration: 1.5,
+            ease: "linear"
+          }}
+        >
+          <Loader2 className="h-10 w-10 text-accent mb-4" />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="text-lg text-foreground"
+        >
           Completing login process...
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </Layout>
   );
 };
