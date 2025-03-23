@@ -14,7 +14,7 @@ import Pricing from "./pages/Pricing";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
-// Protected route component - kept for future use but not currently applied
+// Protected route component that redirects to login if user is not authenticated
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
   
@@ -49,9 +49,19 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
-              {/* Removed ProtectedRoute wrapper */}
-              <Route path="/dashboard" element={<Index />} />
-              <Route path="/goals/:id" element={<GoalDetail />} />
+              
+              {/* Protected routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } />
+              <Route path="/goals/:id" element={
+                <ProtectedRoute>
+                  <GoalDetail />
+                </ProtectedRoute>
+              } />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

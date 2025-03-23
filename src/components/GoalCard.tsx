@@ -19,7 +19,11 @@ export function GoalCard({ goal, onSelect }: GoalCardProps) {
   // Format the creation date properly
   const formatDate = () => {
     try {
-      return formatDistanceToNow(new Date(goal.createdAt), { addSuffix: true });
+      if (!goal.createdAt) return "recently";
+      
+      // Handle both string dates and ISO strings
+      const date = new Date(goal.createdAt);
+      return formatDistanceToNow(date, { addSuffix: true });
     } catch (error) {
       console.error("Error formatting date:", error, goal.createdAt);
       return "recently";

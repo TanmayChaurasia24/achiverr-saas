@@ -1,3 +1,4 @@
+
 import { Goal, RoadmapItem, Task } from "@/types";
 
 const apikey = "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";
@@ -10,7 +11,7 @@ export const generateRoadmap = async (
   console.log("Generating roadmap for:", { goalTitle, goalDescription, timeframe });
   if(!apikey) {
     console.error("No API key found");
-    return [];
+    return getFallbackRoadmap(timeframe);
   }
 
   try {
@@ -32,21 +33,19 @@ export const generateRoadmap = async (
                 text: `Create a ${timeframe}-day roadmap for achieving "${goalTitle}". 
 
                 **Roadmap Requirements:**
-                1️⃣ Start from the basics and progressively move to advanced concepts.
-                2️⃣ Split the roadmap into day ranges (e.g., "Day 1-3") — each block must contain a list of tasks for that period.
-                3️⃣ Respect user preferences from this description: "${goalDescription}". 
+                1️⃣ Split the roadmap into specific days or day ranges (e.g., "Day 1-3", "Day 4").
+                2️⃣ Create a detailed, actionable plan with specific tasks for each time period.
+                3️⃣ Start from the basics and progressively move to advanced concepts.
+                4️⃣ Respect user preferences from this description: "${goalDescription}". 
                     - For example: if the user mentions leave from Day 3-5, no tasks should be scheduled for those days.
-                4️⃣ Return the roadmap as an array of JSON objects. Each object must have:
-                  - **timePeriod**: A string representing the days (e.g., "Day 1-3")
-                  - **tasks**: An array of tasks or milestones for this period.
+                5️⃣ Return ONLY the roadmap as JSON, with this exact format:
+                   [
+                     { "timePeriod": "Day 1-3", "tasks": ["Learn the basics", "Set up environment"] },
+                     { "timePeriod": "Day 4-6", "tasks": ["Intermediate topics", "Build a mini-project"] }
+                   ]
 
-                Expected Output (example):[
-                  { "timePeriod": "Day 1-3", "tasks": ["Learn the basics", "Set up environment"] },
-                  { "timePeriod": "Day 4-6", "tasks": ["Intermediate topics", "Build a mini-project"] },
-                  { "timePeriod": "Day 7", "tasks": ["Review and prepare for advanced concepts"] }
-                ]
-
-                important: Return the output as a clean JSON array — no extra text, no formatting, and no backticks like \` \`\`\`json \`. Only the raw JSON array itself.
+                Important: Return the output as a clean JSON array — no extra text, no markdown formatting like \`\`\`json.
+                Just the raw JSON array.
                 `,
               },
             ],
@@ -119,15 +118,17 @@ function getFallbackRoadmap(timeframe: number): RoadmapItem[] {
     const startDay = i * daysPerSection + 1;
     const endDay = Math.min((i + 1) * daysPerSection, timeframe);
     
+    const tasks = [
+      i === 0 ? "Research and understand the basics" : `Continue building on previous knowledge`,
+      i === 0 ? "Set up required tools and environment" : `Practice core skills from days ${startDay-daysPerSection}-${startDay-1}`,
+      `Create a plan for days ${startDay}-${endDay}`,
+      i === sections-1 ? "Review overall progress and achievements" : `Prepare for the next phase`
+    ];
+    
     roadmap.push({
       id: crypto.randomUUID(),
       timePeriod: `Day ${startDay}-${endDay}`,
-      tasks: [
-        "Research and plan",
-        "Build foundation",
-        "Practice core skills",
-        "Review progress"
-      ],
+      tasks,
       completed: false
     });
   }
@@ -169,10 +170,12 @@ export const generateDailyTasks = async (
                 3. Each task should be clear, specific, and achievable within a day.
                 4. If it's an early day (first 25% of timeline): focus on research, planning, and setup.
                 5. If it's a middle day (25-75% of timeline): focus on implementation and execution.
-                6. If it's a late day (last 25% of timeline): focus on refinement, testing, and review.
+                6. If it's a late day (last 75% of timeline): focus on refinement, testing, and review.
 
-                Return ONLY a clean JSON array of task descriptions, no additional text or formatting:
+                Return ONLY a clean JSON array of task descriptions:
                 ["Task 1 description", "Task 2 description", "Task 3 description"]
+                
+                NO other text or formatting. Just the raw JSON array.
                 `
               },
             ],
@@ -181,18 +184,39 @@ export const generateDailyTasks = async (
       }),
     });
 
-    if (!response.ok) throw new Error("Failed to fetch tasks from API");
+    if (!response.ok) {
+      console.error("Failed to fetch tasks from API:", await response.text());
+      throw new Error("Failed to fetch tasks from API");
+    }
 
     const data = await response.json();
     console.log("Tasks API response:", data);
     
     // Extract the AI-generated tasks
     const tasksData = data.choices?.[0]?.message?.content;
-    if (!tasksData) throw new Error("Invalid response format from AI");
+    if (!tasksData) {
+      console.error("Invalid response format from AI:", data);
+      throw new Error("Invalid response format from AI");
+    }
+    
+    console.log("Raw tasks data:", tasksData);
     
     // Clean the response and parse JSON
     const cleanedTasksData = tasksData.replace(/```json|```/g, "").trim();
-    const parsedTasks = JSON.parse(cleanedTasksData);
+    console.log("Cleaned tasks data:", cleanedTasksData);
+    
+    let parsedTasks;
+    try {
+      parsedTasks = JSON.parse(cleanedTasksData);
+    } catch (error) {
+      console.error("Error parsing tasks data:", error);
+      return fallbackTasks(goal, day);
+    }
+    
+    if (!Array.isArray(parsedTasks)) {
+      console.error("Parsed tasks data is not an array:", parsedTasks);
+      return fallbackTasks(goal, day);
+    }
     
     // Create task objects
     const tasks: Task[] = parsedTasks.map((description: string) => ({
@@ -204,6 +228,7 @@ export const generateDailyTasks = async (
       createdAt: new Date().toISOString(),
     }));
     
+    console.log("Final tasks:", tasks);
     return tasks;
   } catch (error) {
     console.error("Error generating daily tasks:", error);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Goal } from "@/types";
@@ -11,6 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart3, TrendingUp, ListChecks, Calendar, PlusCircle } from "lucide-react";
 import { AIGoalSuggestions } from "@/components/AIGoalSuggestions";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -33,16 +35,141 @@ const itemVariants = {
 const Index = () => {
   const navigate = useNavigate();
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   
   useEffect(() => {
     loadGoals();
-  }, []);
+  }, [user]);
   
-  const loadGoals = () => {
-    console.log("Loading goals");
-    const storedGoals = getGoals();
-    console.log("Stored goals:", storedGoals);
-    setGoals(storedGoals);
+  const loadGoals = async () => {
+    setLoading(true);
+    
+    try {
+      if (user) {
+        // Fetch goals from Supabase
+        console.log("Fetching goals from Supabase for user:", user.id);
+        
+        const { data, error } = await supabase
+          .from('goals')
+          .select(`
+            *,
+            roadmap_items(*)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error("Error fetching goals from Supabase:", error);
+          toast.error("Failed to load goals");
+          // Fall back to local storage
+          const storedGoals = getGoals();
+          setGoals(storedGoals);
+        } else if (data) {
+          console.log("Goals fetched from Supabase:", data);
+          
+          // Transform data to match the Goal type expected by the app
+          const transformedGoals: Goal[] = await Promise.all(data.map(async (goal) => {
+            // Fetch associated tasks
+            const { data: tasksData, error: tasksError } = await supabase
+              .from('tasks')
+              .select('*')
+              .eq('goal_id', goal.id);
+              
+            if (tasksError) {
+              console.error("Error fetching tasks:", tasksError);
+            }
+            
+            // Calculate progress
+            const completedTasks = tasksData ? tasksData.filter(task => task.completed).length : 0;
+            const totalTasks = tasksData ? tasksData.length : 0;
+            
+            // If there are tasks, calculate progress based on tasks
+            // Otherwise, use the progress value from the database
+            let progressValue = goal.progress || 0;
+            if (totalTasks > 0) {
+              progressValue = Math.round((completedTasks / totalTasks) * 100);
+            }
+            
+            // Create roadmap from roadmap_items
+            const roadmapItems = goal.roadmap_items || [];
+            const roadmap = roadmapItems.map(item => {
+              // Try to parse description as tasks if it contains the separator
+              let tasks: string[] = [];
+              if (item.description && item.description.includes('|')) {
+                tasks = item.description.split('|').map(task => task.trim());
+              } else {
+                tasks = [item.description];
+              }
+              
+              return {
+                id: item.id,
+                timePeriod: `Day ${item.day}`,
+                tasks,
+                completed: item.completed
+              };
+            });
+            
+            // Group roadmap items by day
+            const groupedRoadmap = roadmapItems.reduce((acc, item) => {
+              const day = item.day;
+              if (!acc[day]) {
+                acc[day] = {
+                  id: crypto.randomUUID(),
+                  timePeriod: `Day ${day}`,
+                  tasks: [],
+                  completed: item.completed
+                };
+              }
+              
+              // Add task from description
+              if (item.description) {
+                if (item.description.includes('|')) {
+                  acc[day].tasks.push(...item.description.split('|').map(task => task.trim()));
+                } else {
+                  acc[day].tasks.push(item.description);
+                }
+              }
+              
+              return acc;
+            }, {} as Record<number, any>);
+            
+            // Convert to array
+            const finalRoadmap = Object.values(groupedRoadmap);
+            
+            return {
+              id: goal.id,
+              title: goal.title,
+              description: goal.description || "",
+              timeframe: goal.timeframe,
+              deadline: goal.deadline,
+              progress: progressValue,
+              createdAt: goal.created_at,
+              roadmap: finalRoadmap,
+              tasks: tasksData || []
+            };
+          }));
+          
+          console.log("Transformed goals:", transformedGoals);
+          setGoals(transformedGoals);
+        }
+      } else {
+        // No user, use local storage
+        console.log("No user, loading goals from local storage");
+        const storedGoals = getGoals();
+        console.log("Stored goals:", storedGoals);
+        setGoals(storedGoals);
+      }
+    } catch (error) {
+      console.error("Error loading goals:", error);
+      toast.error("Failed to load goals");
+      
+      // Fallback to local storage
+      const storedGoals = getGoals();
+      setGoals(storedGoals);
+    } finally {
+      setLoading(false);
+    }
   };
   
   const handleSelectGoal = (goalId: string) => {
@@ -56,7 +183,8 @@ const Index = () => {
     return total + completed;
   }, 0);
   
-  const userName = "there";
+  // Get user name from profile if available
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "there";
 
   return (
     <Layout>
@@ -163,7 +291,11 @@ const Index = () => {
             </div>
             
             <TabsContent value="current" className="mt-0">
-              {goals.length > 0 ? (
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-pulse text-muted-foreground">Loading goals...</div>
+                </div>
+              ) : goals.length > 0 ? (
                 <motion.div 
                   className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
                   initial="hidden"
