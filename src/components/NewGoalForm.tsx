@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { generateRoadmap } from "@/utils/api";
-import { createGoal, createRoadmapItems } from "@/utils/supabaseHelpers";
+import { saveGoal } from "@/utils/storage";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { Goal } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 interface NewGoalFormProps {
@@ -26,17 +29,16 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title || !timeframe) return;
+    if (!title || !timeframe) {
+      toast.error("Please provide a title and timeframe for your goal");
+      return;
+    }
     
     setLoading(true);
     
     try {
-      if (!user) {
-        toast.error("You must be logged in to create a goal");
-        setLoading(false);
-        return;
-      }
-
+      console.log("Generating roadmap for:", { title, description, timeframe: parseInt(timeframe) });
+      
       // Generate roadmap using AI
       const roadmap = await generateRoadmap(
         title,
@@ -44,22 +46,80 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         parseInt(timeframe)
       );
       
+      console.log("Generated roadmap:", roadmap);
+      
+      if (!roadmap || roadmap.length === 0) {
+        toast.error("Failed to generate roadmap. Please try again.");
+        setLoading(false);
+        return;
+      }
+      
       const deadline = new Date();
       deadline.setDate(deadline.getDate() + parseInt(timeframe));
       
-      // Create goal in Supabase
-      const newGoal = await createGoal({
+      // Create the new goal object
+      const newGoal: Goal = {
+        id: crypto.randomUUID(),
         title,
         description,
         timeframe: parseInt(timeframe),
         deadline: deadline.toISOString(),
-        roadmap: [],
+        progress: 0,
+        roadmap: roadmap || [],
+        createdAt: new Date().toISOString(),
         tasks: []
-      });
+      };
       
-      // Create roadmap items in Supabase
-      if (newGoal && roadmap.length > 0) {
-        await createRoadmapItems(newGoal.id, roadmap);
+      console.log("Saving goal:", newGoal);
+      
+      // If user is logged in, save to Supabase
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from('goals')
+            .insert({
+              id: newGoal.id,
+              title: newGoal.title,
+              description: newGoal.description,
+              timeframe: newGoal.timeframe,
+              deadline: newGoal.deadline,
+              user_id: user.id
+            });
+            
+          if (error) {
+            console.error("Error saving goal to Supabase:", error);
+            toast.error("Failed to save goal to database");
+            // Fall back to local storage
+            saveGoal(newGoal);
+          } else {
+            console.log("Goal saved to Supabase successfully");
+            
+            // Also save roadmap items to Supabase
+            if (roadmap && roadmap.length > 0) {
+              const roadmapItems = roadmap.map(item => ({
+                goal_id: newGoal.id,
+                day: parseInt(item.timePeriod.replace(/[^0-9]/g, '')) || 1,
+                description: item.tasks?.join(' | ') || item.timePeriod,
+                completed: false
+              }));
+              
+              const { error: roadmapError } = await supabase
+                .from('roadmap_items')
+                .insert(roadmapItems);
+                
+              if (roadmapError) {
+                console.error("Error saving roadmap to Supabase:", roadmapError);
+              }
+            }
+          }
+        } catch (dbError) {
+          console.error("Exception saving to database:", dbError);
+          // Fall back to local storage
+          saveGoal(newGoal);
+        }
+      } else {
+        // No user, save to local storage
+        saveGoal(newGoal);
       }
       
       toast.success("Goal created successfully!");
@@ -80,10 +140,15 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="group animate-fade-in">
-          <PlusCircle className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
-          Create New Goal
-        </Button>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Button className="group animate-fade-in">
+            <PlusCircle className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+            Create New Goal
+          </Button>
+        </motion.div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
