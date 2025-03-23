@@ -9,7 +9,8 @@ export const generateRoadmap = async (
 ): Promise<RoadmapItem[]> => {
   console.log("Generating roadmap for:", { goalTitle, goalDescription, timeframe });
   if(!apikey) {
-    console.log("not api key");
+    console.error("No API key found");
+    return [];
   }
 
   try {
@@ -54,34 +55,85 @@ export const generateRoadmap = async (
       }),
     });
 
-    if (!response.ok) throw new Error("Failed to fetch roadmap from API");
+    if (!response.ok) {
+      console.error("Failed to fetch roadmap from API:", await response.text());
+      throw new Error("Failed to fetch roadmap from API");
+    }
 
     const data = await response.json();
-    console.log("data is: ", data);
+    console.log("AI response data:", data);
         
     // Extract the AI-generated roadmap
-    const roadmapData = data.choices?.[0]?.message?.content;
-    if (!roadmapData) throw new Error("Invalid response format from AI");
-    console.log("editing response");
+    let roadmapData = data.choices?.[0]?.message?.content;
+    if (!roadmapData) {
+      console.error("Invalid response format from AI:", data);
+      throw new Error("Invalid response format from AI");
+    }
     
-    await roadmapData.replace(/```json|```/g, "").trim();
-    console.log("roadmapdata is: ", roadmapData);
-    const parsedRoadmapData = JSON.parse(roadmapData); 
+    console.log("Raw roadmap data:", roadmapData);
+    
+    // Clean the response by removing any markdown code block syntax
+    roadmapData = roadmapData.replace(/```json|```/g, "").trim();
+    console.log("Cleaned roadmap data:", roadmapData);
+    
+    // Try to parse the JSON
+    let parsedRoadmapData;
+    try {
+      parsedRoadmapData = JSON.parse(roadmapData);
+    } catch (error) {
+      console.error("Error parsing roadmap data:", error);
+      // Fallback to a basic roadmap if parsing fails
+      return getFallbackRoadmap(timeframe);
+    }
+    
+    if (!Array.isArray(parsedRoadmapData)) {
+      console.error("Parsed roadmap data is not an array:", parsedRoadmapData);
+      return getFallbackRoadmap(timeframe);
+    }
 
     const roadmap: RoadmapItem[] = parsedRoadmapData.map((item: any) => ({
       id: crypto.randomUUID(),
       timePeriod: item.timePeriod,
-      tasks: item.tasks,
+      tasks: item.tasks || [],
       completed: false,
     }));
-    console.log("final roadmap is: ", roadmap);
     
+    console.log("Final roadmap:", roadmap);
     return roadmap;
   } catch (error) {
     console.error("Error generating roadmap:", error);
-    return [];
+    return getFallbackRoadmap(timeframe);
   }
 };
+
+function getFallbackRoadmap(timeframe: number): RoadmapItem[] {
+  console.log("Using fallback roadmap");
+  
+  // Create sections based on timeframe
+  const sections = Math.min(5, Math.max(3, Math.ceil(timeframe / 7)));
+  const daysPerSection = Math.ceil(timeframe / sections);
+  
+  const roadmap: RoadmapItem[] = [];
+  
+  for (let i = 0; i < sections; i++) {
+    const startDay = i * daysPerSection + 1;
+    const endDay = Math.min((i + 1) * daysPerSection, timeframe);
+    
+    roadmap.push({
+      id: crypto.randomUUID(),
+      timePeriod: `Day ${startDay}-${endDay}`,
+      tasks: [
+        "Research and plan",
+        "Build foundation",
+        "Practice core skills",
+        "Review progress"
+      ],
+      completed: false
+    });
+  }
+  
+  return roadmap;
+}
 
 export const generateDailyTasks = async (
   goal: Goal,

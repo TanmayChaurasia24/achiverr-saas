@@ -26,6 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 const GoalDetail = () => {
   const navigate = useNavigate();
@@ -40,12 +41,17 @@ const GoalDetail = () => {
     }
     
     const loadGoal = () => {
+      console.log("Loading goal with ID:", id);
       const foundGoal = getGoalById(id);
+      
       if (!foundGoal) {
+        console.error("Goal not found:", id);
         toast.error("Goal not found");
         navigate("/");
         return;
       }
+      
+      console.log("Found goal:", foundGoal);
       
       // Calculate current progress
       const progress = calculateGoalProgress(id);
@@ -88,7 +94,12 @@ const GoalDetail = () => {
   }
 
   return (
-    <div className="space-y-6 animate-slide-up p-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6 p-8"
+    >
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"
@@ -123,34 +134,44 @@ const GoalDetail = () => {
         </AlertDialog>
       </div>
       
-      <div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
         <h1 className="text-3xl font-bold tracking-tight mb-2">{goal.title}</h1>
         <p className="text-muted-foreground">{goal.description}</p>
-      </div>
+      </motion.div>
       
-      <Tabs defaultValue="roadmap" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="roadmap" className="flex items-center">
-            <Map className="mr-2 h-4 w-4" />
-            Roadmap
-          </TabsTrigger>
-          <TabsTrigger value="tasks" className="flex items-center">
-            <ListChecks className="mr-2 h-4 w-4" />
-            Tasks
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="roadmap">
-          <RoadmapView goal={goal} />
-        </TabsContent>
-        <TabsContent value="tasks">
-          <TaskList 
-            goal={goal} 
-            tasks={tasks} 
-            onTasksUpdated={handleTasksUpdated} 
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Tabs defaultValue="roadmap" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="roadmap" className="flex items-center">
+              <Map className="mr-2 h-4 w-4" />
+              Roadmap
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="flex items-center">
+              <ListChecks className="mr-2 h-4 w-4" />
+              Tasks
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="roadmap">
+            <RoadmapView goal={goal} />
+          </TabsContent>
+          <TabsContent value="tasks">
+            <TaskList 
+              goal={goal} 
+              tasks={tasks} 
+              onTasksUpdated={handleTasksUpdated} 
+            />
+          </TabsContent>
+        </Tabs>
+      </motion.div>
+    </motion.div>
   );
 };
 
