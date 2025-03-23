@@ -13,8 +13,8 @@ export interface Goal {
 
 export interface RoadmapItem {
   id: string;
-  day: number;
-  description: string;
+  timePeriod: string;
+  tasks: string[];
   completed: boolean;
 }
 

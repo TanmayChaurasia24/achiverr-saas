@@ -1,11 +1,10 @@
+
 import { Goal, RoadmapItem } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, Map } from "lucide-react";
-import { generateRoadmap } from "@/utils/api";
-import { Button } from "./ui/button";
 import { useState } from "react";
 
 interface RoadmapViewProps {
@@ -15,37 +14,44 @@ interface RoadmapViewProps {
 export function RoadmapView({ goal }: RoadmapViewProps) {
   const [loading, setLoading] = useState(false);
   const { roadmap, progress } = goal;
-
-  // Group roadmap items to prevent too much scrolling
-  const groupedRoadmap: { days: number[]; items: RoadmapItem[] }[] = [];
-
-  if (goal.timeframe <= 10) {
-    // For short timeframes, show each day
-    roadmap.forEach((item) => {
-      groupedRoadmap.push({
-        days: [item.day],
-        items: [item],
-      });
-    });
-  } else if (goal.timeframe <= 30) {
-    // For medium timeframes, group by 3 days
-    for (let i = 0; i < roadmap.length; i += 3) {
-      const group = roadmap.slice(i, i + 3);
-      groupedRoadmap.push({
-        days: group.map((item) => item.day),
-        items: group,
-      });
+  
+  // Extract distinct time periods from roadmap
+  const timePeriods = roadmap
+    .map(item => item.timePeriod)
+    .filter((value, index, self) => self.indexOf(value) === index);
+  
+  // Group roadmap items by timePeriod
+  const groupedRoadmap = timePeriods.map(period => {
+    const items = roadmap.filter(item => item.timePeriod === period);
+    
+    // Extract day ranges from the timePeriod (e.g., "Day 1-3" -> [1, 3])
+    const dayMatch = period.match(/Day\s+(\d+)(?:-(\d+))?/i);
+    let startDay = 1;
+    let endDay = 1;
+    
+    if (dayMatch) {
+      startDay = parseInt(dayMatch[1]);
+      endDay = dayMatch[2] ? parseInt(dayMatch[2]) : startDay;
     }
-  } else {
-    // For long timeframes, group by week
-    for (let i = 0; i < roadmap.length; i += 7) {
-      const group = roadmap.slice(i, i + 7);
-      groupedRoadmap.push({
-        days: group.map((item) => item.day),
-        items: group,
-      });
-    }
-  }
+    
+    return {
+      timePeriod: period,
+      days: [startDay, endDay],
+      items: items
+    };
+  }).sort((a, b) => a.days[0] - b.days[0]); // Sort by start day
+  
+  // Calculate current day
+  const currentDay = Math.min(
+    Math.max(
+      1,
+      Math.ceil(
+        (new Date().getTime() - new Date(goal.createdAt).getTime()) / 
+        (1000 * 60 * 60 * 24)
+      )
+    ),
+    goal.timeframe
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -64,54 +70,76 @@ export function RoadmapView({ goal }: RoadmapViewProps) {
       </div>
 
       <div className="space-y-4">
-        {groupedRoadmap.map((group, index) => {
-          const isFirst = index === 0;
-          const isLast = index === groupedRoadmap.length - 1;
-          const dayLabel =
-            group.days.length === 1
-              ? `Day ${group.days[0]}`
-              : `Days ${Math.min(...group.days)}-${Math.max(...group.days)}`;
+        {groupedRoadmap.length === 0 ? (
+          <Card className="bg-accent/5">
+            <CardContent className="pt-6 text-center">
+              <p className="text-muted-foreground">
+                No roadmap items available yet.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          groupedRoadmap.map((group, index) => {
+            const isFirst = index === 0;
+            const isLast = index === groupedRoadmap.length - 1;
+            const isCurrentPeriod = currentDay >= group.days[0] && currentDay <= group.days[1];
+            
+            return (
+              <Card 
+                key={group.timePeriod} 
+                className={`relative overflow-hidden ${isCurrentPeriod ? 'border-primary/50' : ''}`}
+              >
+                {!isFirst && (
+                  <div className="absolute top-0 left-6 w-px h-4 bg-border -mt-4"></div>
+                )}
+                {!isLast && (
+                  <div className="absolute bottom-0 left-6 w-px h-4 bg-border -mb-4"></div>
+                )}
 
-          return (
-            <Card key={index} className="relative overflow-hidden">
-              {!isFirst && (
-                <div className="absolute top-0 left-6 w-px h-4 bg-border -mt-4"></div>
-              )}
-              {!isLast && (
-                <div className="absolute bottom-0 left-6 w-px h-4 bg-border -mb-4"></div>
-              )}
-
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-accent text-accent-foreground mr-3">
-                    {Math.min(...group.days)}
-                  </div>
-                  <span>{dayLabel}</span>
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                <div className="pl-[60px] space-y-3">
-                  {group.items.map((item, itemIndex) => (
-                    <div key={item.id}>
-                      {itemIndex > 0 && <Separator className="my-3" />}
-                      <div className="flex items-start">
-                        <div className="flex-1">
-                          <p className="text-sm">{item.description}</p>
-                          {item.completed && (
-                            <Badge variant="outline" className="mt-2">
-                              Completed
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-accent text-accent-foreground mr-3">
+                      {group.days[0]}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                    <span>
+                      {group.timePeriod}
+                      {isCurrentPeriod && (
+                        <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                          Current
+                        </span>
+                      )}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent>
+                  <div className="pl-[60px] space-y-3">
+                    {group.items.map((item, itemIndex) => {
+                      // For each item in the timePeriod, we now have tasks
+                      const tasks = item.tasks || [];
+                      
+                      return (
+                        <div key={item.id || itemIndex}>
+                          {itemIndex > 0 && <Separator className="my-3" />}
+                          
+                          {tasks.map((task, taskIndex) => (
+                            <div key={`${item.id}-${taskIndex}`} className="mb-2">
+                              <div className="flex items-start">
+                                <div className="flex-1">
+                                  <p className="text-sm">• {task}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
     </div>
   );

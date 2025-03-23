@@ -1,7 +1,6 @@
 import { Goal, RoadmapItem, Task } from "@/types";
 
-
-const apikey ="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";
+const apikey = "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";
 
 export const generateRoadmap = async (
   goalTitle: string,
@@ -11,7 +10,6 @@ export const generateRoadmap = async (
   console.log("Generating roadmap for:", { goalTitle, goalDescription, timeframe });
   if(!apikey) {
     console.log("not api key");
-    
   }
 
   try {
@@ -78,7 +76,6 @@ export const generateRoadmap = async (
     }));
     console.log("final roadmap is: ", roadmap);
     
-
     return roadmap;
   } catch (error) {
     console.error("Error generating roadmap:", error);
@@ -86,30 +83,96 @@ export const generateRoadmap = async (
   }
 };
 
-
 export const generateDailyTasks = async (
   goal: Goal,
   day: number
 ): Promise<Task[]> => {
   console.log("Generating tasks for day:", day, "of goal:", goal.title);
 
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apikey}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        model: "google/gemma-3-27b-it:free",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Generate a list of specific tasks for Day ${day} of my goal: "${goal.title}".
 
-  // This is a simulation - in real life, this would make a call to Gemini API
-  const tasks: Task[] = [];
-  const currentProgress = goal.progress;
+                **Goal Description:** ${goal.description || "No specific description provided"}
+                **Overall Timeframe:** ${goal.timeframe} days
+                **Current Progress:** ${goal.progress}% complete
 
-  // Logic to determine number of tasks based on progress and day
+                **Task Generation Guidelines:**
+                1. Create 3-5 specific, actionable tasks for Day ${day}.
+                2. Tasks should be appropriate for the current stage of the goal (${day} out of ${goal.timeframe} days).
+                3. Each task should be clear, specific, and achievable within a day.
+                4. If it's an early day (first 25% of timeline): focus on research, planning, and setup.
+                5. If it's a middle day (25-75% of timeline): focus on implementation and execution.
+                6. If it's a late day (last 25% of timeline): focus on refinement, testing, and review.
+
+                Return ONLY a clean JSON array of task descriptions, no additional text or formatting:
+                ["Task 1 description", "Task 2 description", "Task 3 description"]
+                `
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch tasks from API");
+
+    const data = await response.json();
+    console.log("Tasks API response:", data);
+    
+    // Extract the AI-generated tasks
+    const tasksData = data.choices?.[0]?.message?.content;
+    if (!tasksData) throw new Error("Invalid response format from AI");
+    
+    // Clean the response and parse JSON
+    const cleanedTasksData = tasksData.replace(/```json|```/g, "").trim();
+    const parsedTasks = JSON.parse(cleanedTasksData);
+    
+    // Create task objects
+    const tasks: Task[] = parsedTasks.map((description: string) => ({
+      id: crypto.randomUUID(),
+      goalId: goal.id,
+      description,
+      day: day,
+      completed: false,
+      createdAt: new Date().toISOString(),
+    }));
+    
+    return tasks;
+  } catch (error) {
+    console.error("Error generating daily tasks:", error);
+    // Fallback to some basic tasks if API fails
+    return fallbackTasks(goal, day);
+  }
+};
+
+// Fallback function for when the API fails
+function fallbackTasks(goal: Goal, day: number): Task[] {
+  console.log("Using fallback tasks generation");
   const tasksCount = Math.floor(Math.random() * 3) + 2; // 2-4 tasks
-
+  const tasks: Task[] = [];
+  
   for (let i = 1; i <= tasksCount; i++) {
     tasks.push({
       id: crypto.randomUUID(),
       goalId: goal.id,
       description: `Task ${i} for day ${day}: ${getRandomTask(
         goal.title,
-        currentProgress,
+        goal.progress,
         day,
         goal.timeframe
       )}`,
@@ -118,9 +181,9 @@ export const generateDailyTasks = async (
       createdAt: new Date().toISOString(),
     });
   }
-
+  
   return tasks;
-};
+}
 
 // Helper function to generate random tasks based on context
 function getRandomTask(
