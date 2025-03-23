@@ -1,7 +1,7 @@
 
 import { Goal, RoadmapItem, Task } from "@/types";
 
-const apikey = "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";
+const apikey = "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";
 
 
 export const generateRoadmap = async (
@@ -16,6 +16,7 @@ export const generateRoadmap = async (
   }
 
   try {
+  
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
