@@ -96,11 +96,37 @@
   }
 
   .glass {
-    @apply backdrop-blur-lg bg-white/10 border border-white/20;
+    @apply backdrop-blur-lg bg-white/10 border border-white/20 shadow-lg;
   }
 
   .dark .glass {
-    @apply backdrop-blur-lg bg-black/20 border border-white/10;
+    @apply backdrop-blur-lg bg-black/20 border border-white/10 shadow-lg;
+  }
+
+  /* Enhanced Card */
+  .enhanced-card {
+    @apply bg-card border rounded-xl shadow-md transition-all duration-300;
+  }
+  
+  .dark .enhanced-card {
+    @apply bg-gradient-to-br from-card to-card/50 border-white/5 shadow-xl;
+  }
+
+  /* Glowing accents */
+  .glow {
+    @apply relative;
+  }
+  
+  .glow::after {
+    @apply content-[''] absolute -z-10 blur-xl opacity-40 bg-accent/30 rounded-full;
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+  }
+  
+  .dark .glow::after {
+    @apply opacity-70 bg-accent/50;
   }
 
   /* Smooth scrolling */
@@ -125,6 +151,27 @@
   .dark ::-webkit-scrollbar-thumb {
     @apply bg-muted rounded-full;
   }
+  
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent to-accent-foreground bg-clip-text text-transparent font-bold;
+  }
+  
+  /* Gradient borders */
+  .gradient-border {
+    @apply relative border border-transparent rounded-xl bg-origin-border;
+  }
+  
+  .gradient-border::before {
+    content: "";
+    @apply absolute inset-0 rounded-xl border border-transparent bg-gradient-to-r from-accent/50 to-accent-foreground/50 -z-10 opacity-70;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+  
+  .dark .gradient-border::before {
+    @apply opacity-100;
+  }
 }
 
 @layer components {
@@ -135,4 +182,51 @@
   .btn-hover {
     @apply transition-all duration-300 hover:scale-105 active:scale-95;
   }
+  
+  /* Animated underline for links */
+  .animated-underline {
+    @apply relative;
+  }
+  
+  .animated-underline::after {
+    @apply content-[''] absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 ease-in-out;
+  }
+  
+  .animated-underline:hover::after {
+    @apply w-full;
+  }
+  
+  /* Pulse animation */
+  .pulse {
+    @apply animate-[pulse_3s_ease-in-out_infinite];
+  }
+}
+
+/* Special animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+.floating-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
+.floating-fast {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Background patterns */
+.dots-pattern {
+  background-image: radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.1) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+.dark .dots-pattern {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
 }

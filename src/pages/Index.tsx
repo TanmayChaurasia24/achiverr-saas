@@ -8,31 +8,17 @@ import { getGoals } from "@/utils/storage";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp, ListChecks, Calendar, PlusCircle } from "lucide-react";
+import { BarChart3, TrendingUp, ListChecks, Calendar, PlusCircle, Sparkles } from "lucide-react";
 import { AIGoalSuggestions } from "@/components/AIGoalSuggestions";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { SceneWrapper } from "@/components/3d/SceneWrapper";
+import { GoalModel } from "@/components/3d/GoalModel";
+import { TasksModel } from "@/components/3d/TasksModel";
+import { FadeIn, ScaleIn, StaggerContainer, StaggerItem, HoverCard } from "@/components/ui/animations";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1
-  }
-};
-
-const Index = () => {
+const Dashboard = () => {
   const navigate = useNavigate();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,105 +55,127 @@ const Index = () => {
     return total + completed;
   }, 0);
   
+  const totalTasks = goals.reduce((total, goal) => {
+    return total + (goal.tasks?.length || 0);
+  }, 0);
+  
+  // Calculate average progress
+  const averageProgress = activeGoals 
+    ? Math.round(goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / activeGoals) 
+    : 0;
+  
   // Get user name from profile if available
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "there";
 
   return (
     <Layout>
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="space-y-8"
-      >
-        <motion.div 
-          variants={itemVariants}
-          className="flex flex-col sm:flex-row justify-between items-start gap-4"
-        >
+      <FadeIn className="space-y-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Hello, {userName}!
+              Hello, <span className="gradient-text">{userName}!</span>
             </h1>
             <p className="text-muted-foreground max-w-xl mt-1">
               Track your goals and daily progress toward what matters most.
             </p>
           </div>
           <NewGoalForm onGoalCreated={loadGoals} />
-        </motion.div>
+        </div>
         
-        <motion.div 
-          variants={itemVariants}
-          className="grid gap-4 md:grid-cols-3"
-        >
-          <motion.div
-            whileHover={{ y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
+        <div className="grid gap-6 md:grid-cols-3">
+          <HoverCard>
+            <Card className="enhanced-card overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
                   Active Goals
+                  <ListChecks className="h-4 w-4 text-accent ml-2" />
                 </CardTitle>
-                <ListChecks className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{activeGoals}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {activeGoals === 0 ? "No goals yet" : `${activeGoals} goal${activeGoals !== 1 ? 's' : ''} in progress`}
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-          
-          <motion.div
-            whileHover={{ y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Completed Tasks
-                </CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{completedTasks}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {completedTasks === 0 ? "No tasks completed yet" : `${completedTasks} task${completedTasks !== 1 ? 's' : ''} completed`}
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-          
-          <motion.div
-            whileHover={{ y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Average Progress
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {activeGoals ? `${Math.round(goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / activeGoals)}%` : "0%"}
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">{activeGoals}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {activeGoals === 0 ? "No goals yet" : `${activeGoals} goal${activeGoals !== 1 ? 's' : ''} in progress`}
+                    </p>
+                  </div>
+                  <div className="h-24 w-24">
+                    <SceneWrapper className="h-24 w-24">
+                      <GoalModel progress={0} size={0.8} />
+                    </SceneWrapper>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Overall goal completion
-                </p>
               </CardContent>
             </Card>
-          </motion.div>
-        </motion.div>
+          </HoverCard>
+          
+          <HoverCard>
+            <Card className="enhanced-card overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  Completed Tasks
+                  <Calendar className="h-4 w-4 text-accent ml-2" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">{completedTasks}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {totalTasks > 0 
+                        ? `${completedTasks}/${totalTasks} tasks completed` 
+                        : "No tasks yet"}
+                    </p>
+                  </div>
+                  <div className="h-24 w-24">
+                    <SceneWrapper className="h-24 w-24">
+                      <TasksModel 
+                        completedTasks={Math.min(completedTasks, 5)} 
+                        totalTasks={Math.min(totalTasks, 5)} 
+                        size={0.6} 
+                      />
+                    </SceneWrapper>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </HoverCard>
+          
+          <HoverCard>
+            <Card className="enhanced-card overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  Average Progress
+                  <TrendingUp className="h-4 w-4 text-accent ml-2" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {averageProgress}%
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Overall goal completion
+                    </p>
+                  </div>
+                  <div className="h-24 w-24">
+                    <SceneWrapper className="h-24 w-24">
+                      <GoalModel progress={averageProgress} size={0.8} />
+                    </SceneWrapper>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </HoverCard>
+        </div>
         
-        {/* AI Goal Suggestions - Unique Feature */}
-        <motion.div variants={itemVariants}>
+        {/* AI Goal Suggestions */}
+        <ScaleIn>
           <AIGoalSuggestions onGoalAdded={loadGoals} />
-        </motion.div>
+        </ScaleIn>
         
-        <motion.div variants={itemVariants}>
+        <div>
           <Tabs defaultValue="current" className="w-full">
             <div className="flex justify-between items-center mb-4">
               <TabsList>
@@ -182,30 +190,21 @@ const Index = () => {
                   <div className="animate-pulse text-muted-foreground">Loading goals...</div>
                 </div>
               ) : goals.length > 0 ? (
-                <motion.div 
-                  className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-                  initial="hidden"
-                  animate="visible"
-                  variants={containerVariants}
-                >
+                <StaggerContainer className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {goals.map((goal) => (
-                    <motion.div key={goal.id} variants={itemVariants}>
+                    <StaggerItem key={goal.id}>
                       <GoalCard 
                         goal={goal} 
                         onSelect={handleSelectGoal}
                       />
-                    </motion.div>
+                    </StaggerItem>
                   ))}
-                </motion.div>
+                </StaggerContainer>
               ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Card className="p-8 text-center">
-                    <div className="mx-auto w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-4">
-                      <PlusCircle className="h-6 w-6 text-secondary-foreground" />
+                <FadeIn delay={0.2}>
+                  <Card className="enhanced-card p-8 text-center">
+                    <div className="mx-auto w-20 h-20 rounded-full bg-secondary/70 flex items-center justify-center mb-4 glow">
+                      <Sparkles className="h-8 w-8 text-accent" />
                     </div>
                     <h3 className="text-xl font-semibold mb-2">No goals yet</h3>
                     <p className="text-muted-foreground mb-6 max-w-md mx-auto">
@@ -214,12 +213,12 @@ const Index = () => {
                     </p>
                     <NewGoalForm onGoalCreated={loadGoals} />
                   </Card>
-                </motion.div>
+                </FadeIn>
               )}
             </TabsContent>
             
             <TabsContent value="completed">
-              <Card>
+              <Card className="enhanced-card">
                 <CardHeader>
                   <CardTitle>Completed Goals</CardTitle>
                   <CardDescription>
@@ -227,15 +226,22 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>Coming soon...</p>
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="mx-auto w-16 h-16 rounded-full bg-secondary/70 flex items-center justify-center mb-4">
+                        <TrendingUp className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <p className="text-muted-foreground">Coming soon...</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
-        </motion.div>
-      </motion.div>
+        </div>
+      </FadeIn>
     </Layout>
   );
 };
 
-export default Index;
+export default Dashboard;
