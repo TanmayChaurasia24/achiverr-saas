@@ -27,7 +27,7 @@ export function RoadmapView({ goal }: RoadmapViewProps) {
   const groupedRoadmap = timePeriods.map(period => {
     const items = roadmap.filter(item => item.timePeriod === period);
     
-    // Extract day ranges from the timePeriod (e.g., "Day 1-3" -> [1, 3])
+    // Extract day ranges from the timePeriod (e.g., "Day 1-3" or "Days 1-3")
     // First try to match patterns like "Day 1-3" or "Days 1-3"
     let dayMatch = period.match(/Days?\s+(\d+)(?:-(\d+))?/i);
     

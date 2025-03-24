@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Goal } from "@/types";
@@ -10,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart3, TrendingUp, ListChecks, Calendar, PlusCircle } from "lucide-react";
 import { AIGoalSuggestions } from "@/components/AIGoalSuggestions";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -40,127 +40,19 @@ const Index = () => {
   
   useEffect(() => {
     loadGoals();
-  }, [user]);
+  }, []);
   
-  const loadGoals = async () => {
+  const loadGoals = () => {
     setLoading(true);
     
     try {
-      if (user) {
-        // Fetch goals from Supabase
-        console.log("Fetching goals from Supabase for user:", user.id);
-        
-        const { data, error } = await supabase
-          .from('goals')
-          .select(`
-            *,
-            roadmap_items(*)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          console.error("Error fetching goals from Supabase:", error);
-          toast.error("Failed to load goals");
-          // Fall back to local storage
-          const storedGoals = getGoals();
-          setGoals(storedGoals);
-        } else if (data) {
-          console.log("Goals fetched from Supabase:", data);
-          
-          // Transform data to match the Goal type expected by the app
-          const transformedGoals: Goal[] = await Promise.all(data.map(async (goal) => {
-            // Fetch associated tasks
-            const { data: tasksData, error: tasksError } = await supabase
-              .from('tasks')
-              .select('*')
-              .eq('goal_id', goal.id);
-              
-            if (tasksError) {
-              console.error("Error fetching tasks:", tasksError);
-            }
-            
-            // Calculate progress
-            const completedTasks = tasksData ? tasksData.filter(task => task.completed).length : 0;
-            const totalTasks = tasksData ? tasksData.length : 0;
-            
-            // If there are tasks, calculate progress based on tasks
-            // Otherwise, use the progress value from the database
-            let progressValue = goal.progress || 0;
-            if (totalTasks > 0) {
-              progressValue = Math.round((completedTasks / totalTasks) * 100);
-            }
-            
-            // Create roadmap from roadmap_items
-            const roadmapItems = goal.roadmap_items || [];
-            
-            // Group roadmap items by day
-            const groupedRoadmap = roadmapItems.reduce((acc, item) => {
-              const day = item.day;
-              if (!acc[day]) {
-                acc[day] = {
-                  id: crypto.randomUUID(),
-                  timePeriod: `Day ${day}`,
-                  tasks: [],
-                  completed: item.completed
-                };
-              }
-              
-              // Add task from description
-              if (item.description) {
-                if (item.description.includes('|')) {
-                  acc[day].tasks.push(...item.description.split('|').map(task => task.trim()));
-                } else {
-                  acc[day].tasks.push(item.description);
-                }
-              }
-              
-              return acc;
-            }, {} as Record<number, any>);
-            
-            // Convert to array
-            const finalRoadmap = Object.values(groupedRoadmap);
-            
-            // Transform tasks from Supabase format to match our app's Task type
-            const transformedTasks = (tasksData || []).map(task => ({
-              id: task.id,
-              goalId: task.goal_id,
-              description: task.description,
-              day: task.day,
-              completed: task.completed,
-              createdAt: task.created_at
-            }));
-            
-            return {
-              id: goal.id,
-              title: goal.title,
-              description: goal.description || "",
-              timeframe: goal.timeframe,
-              deadline: goal.deadline,
-              progress: progressValue,
-              createdAt: goal.created_at,
-              roadmap: finalRoadmap,
-              tasks: transformedTasks
-            };
-          }));
-          
-          console.log("Transformed goals:", transformedGoals);
-          setGoals(transformedGoals);
-        }
-      } else {
-        // No user, use local storage
-        console.log("No user, loading goals from local storage");
-        const storedGoals = getGoals();
-        console.log("Stored goals:", storedGoals);
-        setGoals(storedGoals);
-      }
+      // Load goals from localStorage
+      const storedGoals = getGoals();
+      console.log("Stored goals:", storedGoals);
+      setGoals(storedGoals);
     } catch (error) {
       console.error("Error loading goals:", error);
       toast.error("Failed to load goals");
-      
-      // Fallback to local storage
-      const storedGoals = getGoals();
-      setGoals(storedGoals);
     } finally {
       setLoading(false);
     }

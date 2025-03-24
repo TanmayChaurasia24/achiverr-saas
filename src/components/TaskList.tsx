@@ -10,11 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { format, addDays } from "date-fns";
+import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
 
 interface TaskListProps {
   goal: Goal;
@@ -29,7 +26,6 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   const [showStartDatePicker, setShowStartDatePicker] = useState(tasks.length === 0);
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [isDateOpen, setIsDateOpen] = useState(false);
-  const { user } = useAuth();
   
   const currentDay = Math.min(
     Math.max(
@@ -76,33 +72,11 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     }
   }, [tasks]);
   
-  const handleTaskCheck = async (taskId: string, checked: boolean) => {
+  const handleTaskCheck = (taskId: string, checked: boolean) => {
     console.log("Marking task complete:", taskId, checked);
     
-    if (user) {
-      try {
-        // Update in Supabase
-        const { error } = await supabase
-          .from('tasks')
-          .update({ completed: checked })
-          .eq('id', taskId);
-          
-        if (error) {
-          console.error("Error updating task in Supabase:", error);
-          toast.error("Failed to update task");
-          // Fall back to local storage
-          markTaskComplete(taskId, checked);
-        }
-      } catch (error) {
-        console.error("Exception updating task:", error);
-        // Fall back to local storage
-        markTaskComplete(taskId, checked);
-      }
-    } else {
-      // Update in local storage
-      markTaskComplete(taskId, checked);
-    }
-    
+    // Update in local storage
+    markTaskComplete(taskId, checked);
     onTasksUpdated();
   };
   
@@ -149,54 +123,10 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
       const newTasks = await generateDailyTasks(goal, day, roadmapGuidance);
       console.log("Generated tasks:", newTasks);
       
-      if (user) {
-        try {
-          // Convert tasks to the format expected by Supabase
-          const tasksToInsert = newTasks.map(task => ({
-            goal_id: task.goalId,
-            description: task.description,
-            day: task.day,
-            completed: task.completed
-          }));
-          
-          const { data, error } = await supabase
-            .from('tasks')
-            .insert(tasksToInsert)
-            .select();
-            
-          if (error) {
-            console.error("Error saving tasks to Supabase:", error);
-            toast.error("Failed to save tasks to database");
-            
-            // Fall back to local storage
-            newTasks.forEach(task => {
-              saveTask(task);
-            });
-          } else {
-            // Transform the returned tasks to match our application Task type
-            const transformedTasks = data.map(task => ({
-              id: task.id,
-              goalId: task.goal_id,
-              description: task.description,
-              day: task.day,
-              completed: task.completed,
-              createdAt: task.created_at
-            }));
-            console.log("Tasks saved to Supabase:", transformedTasks);
-          }
-        } catch (error) {
-          console.error("Exception saving tasks:", error);
-          // Fall back to local storage
-          newTasks.forEach(task => {
-            saveTask(task);
-          });
-        }
-      } else {
-        // Save to local storage
-        newTasks.forEach(task => {
-          saveTask(task);
-        });
-      }
+      // Save to local storage
+      newTasks.forEach(task => {
+        saveTask(task);
+      });
       
       toast.success(`Generated ${newTasks.length} tasks for day ${day}`);
       onTasksUpdated();

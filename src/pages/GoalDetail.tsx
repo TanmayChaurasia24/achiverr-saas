@@ -49,134 +49,16 @@ const GoalDetail = () => {
       console.log("Loading goal with ID:", id);
       
       try {
-        if (user) {
-          // Fetch from Supabase
-          console.log("Fetching goal from Supabase");
-          
-          const { data: goalData, error: goalError } = await supabase
-            .from('goals')
-            .select('*')
-            .eq('id', id)
-            .eq('user_id', user.id)
-            .single();
-            
-          if (goalError) {
-            console.error("Error fetching goal from Supabase:", goalError);
-            // Fall back to local storage
-            const localGoal = getGoalById(id);
-            if (!localGoal) {
-              toast.error("Goal not found");
-              navigate("/");
-              return;
-            }
-            setGoal(localGoal);
-            setTasks(getTasksByGoalId(id));
-          } else if (goalData) {
-            console.log("Goal fetched from Supabase:", goalData);
-            
-            // Fetch roadmap items
-            const { data: roadmapData, error: roadmapError } = await supabase
-              .from('roadmap_items')
-              .select('*')
-              .eq('goal_id', id);
-              
-            if (roadmapError) {
-              console.error("Error fetching roadmap:", roadmapError);
-            }
-            
-            // Fetch tasks
-            const { data: tasksData, error: tasksError } = await supabase
-              .from('tasks')
-              .select('*')
-              .eq('goal_id', id);
-              
-            if (tasksError) {
-              console.error("Error fetching tasks:", tasksError);
-            }
-            
-            // Calculate progress
-            const completedTasks = tasksData ? tasksData.filter(task => task.completed).length : 0;
-            const totalTasks = tasksData ? tasksData.length : 0;
-            
-            let progressValue = goalData.progress || 0;
-            if (totalTasks > 0) {
-              progressValue = Math.round((completedTasks / totalTasks) * 100);
-              
-              // Update progress in Supabase
-              await supabase
-                .from('goals')
-                .update({ progress: progressValue })
-                .eq('id', id);
-            }
-            
-            // Group roadmap items by day
-            const groupedRoadmap = (roadmapData || []).reduce((acc, item) => {
-              const day = item.day;
-              if (!acc[day]) {
-                acc[day] = {
-                  id: crypto.randomUUID(),
-                  timePeriod: `Day ${day}`,
-                  tasks: [],
-                  completed: item.completed
-                };
-              }
-              
-              // Add task from description
-              if (item.description) {
-                if (item.description.includes('|')) {
-                  acc[day].tasks.push(...item.description.split('|').map(task => task.trim()));
-                } else {
-                  acc[day].tasks.push(item.description);
-                }
-              }
-              
-              return acc;
-            }, {} as Record<number, any>);
-            
-            // Convert to array and sort by day
-            const finalRoadmap = Object.values(groupedRoadmap).sort((a: any, b: any) => {
-              const dayA = parseInt(a.timePeriod.replace(/[^0-9]/g, '')) || 0;
-              const dayB = parseInt(b.timePeriod.replace(/[^0-9]/g, '')) || 0;
-              return dayA - dayB;
-            });
-            
-            // Transform Supabase task format to match our application Task type
-            const transformedTasks: Task[] = (tasksData || []).map(task => ({
-              id: task.id,
-              goalId: task.goal_id,
-              description: task.description,
-              day: task.day,
-              completed: task.completed,
-              createdAt: task.created_at
-            }));
-            
-            const fullGoal: Goal = {
-              id: goalData.id,
-              title: goalData.title,
-              description: goalData.description || "",
-              timeframe: goalData.timeframe,
-              deadline: goalData.deadline,
-              progress: progressValue,
-              createdAt: goalData.created_at,
-              roadmap: finalRoadmap,
-              tasks: transformedTasks
-            };
-            
-            console.log("Constructed goal:", fullGoal);
-            setGoal(fullGoal);
-            setTasks(transformedTasks);
-          }
-        } else {
-          // No user, use local storage
-          const localGoal = getGoalById(id);
-          if (!localGoal) {
-            toast.error("Goal not found");
-            navigate("/");
-            return;
-          }
-          setGoal(localGoal);
-          setTasks(getTasksByGoalId(id));
+        // Load goal from local storage
+        const localGoal = getGoalById(id);
+        if (!localGoal) {
+          toast.error("Goal not found");
+          navigate("/");
+          return;
         }
+        
+        setGoal(localGoal);
+        setTasks(getTasksByGoalId(id));
       } catch (error) {
         console.error("Error loading goal:", error);
         toast.error("Failed to load goal");
@@ -187,92 +69,26 @@ const GoalDetail = () => {
     };
     
     loadGoal();
-  }, [id, navigate, user]);
+  }, [id, navigate]);
   
-  const handleTasksUpdated = async () => {
+  const handleTasksUpdated = () => {
     if (!goal) return;
     
-    if (user) {
-      // Fetch latest tasks from Supabase
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('goal_id', goal.id);
-        
-      if (tasksError) {
-        console.error("Error fetching updated tasks:", tasksError);
-        return;
-      }
-      
-      // Transform Supabase task format to match our application Task type
-      const transformedTasks: Task[] = (tasksData || []).map(task => ({
-        id: task.id,
-        goalId: task.goal_id,
-        description: task.description,
-        day: task.day,
-        completed: task.completed,
-        createdAt: task.created_at
-      }));
-      
-      setTasks(transformedTasks);
-      
-      // Calculate progress
-      const completedTasks = tasksData ? tasksData.filter(task => task.completed).length : 0;
-      const totalTasks = tasksData ? tasksData.length : 0;
-      
-      let progressValue = goal.progress;
-      if (totalTasks > 0) {
-        progressValue = Math.round((completedTasks / totalTasks) * 100);
-        
-        // Update progress in Supabase
-        await supabase
-          .from('goals')
-          .update({ progress: progressValue })
-          .eq('id', goal.id);
-      }
-      
-      // Update goal
-      const updatedGoal = { ...goal, progress: progressValue };
-      setGoal(updatedGoal);
-    } else {
-      // Local storage
-      setTasks(getTasksByGoalId(goal.id));
-      
-      // Update goal progress
-      const progress = calculateGoalProgress(goal.id);
-      const updatedGoal = { ...goal, progress };
-      setGoal(updatedGoal);
-      saveGoal(updatedGoal);
-    }
+    // Update tasks
+    setTasks(getTasksByGoalId(goal.id));
+    
+    // Update goal progress
+    const progress = calculateGoalProgress(goal.id);
+    const updatedGoal = { ...goal, progress };
+    setGoal(updatedGoal);
+    saveGoal(updatedGoal);
   };
   
-  const handleDeleteGoal = async () => {
+  const handleDeleteGoal = () => {
     if (!goal) return;
     
-    if (user) {
-      // Delete from Supabase
-      try {
-        // Delete goal (should cascade delete roadmap items and tasks)
-        const { error } = await supabase
-          .from('goals')
-          .delete()
-          .eq('id', goal.id);
-          
-        if (error) {
-          console.error("Error deleting goal from Supabase:", error);
-          toast.error("Failed to delete goal");
-          // Fall back to local storage
-          deleteGoal(goal.id);
-        }
-      } catch (error) {
-        console.error("Exception deleting goal:", error);
-        // Fall back to local storage
-        deleteGoal(goal.id);
-      }
-    } else {
-      // Delete from local storage
-      deleteGoal(goal.id);
-    }
+    // Delete goal from local storage
+    deleteGoal(goal.id);
     
     toast.success("Goal deleted successfully");
     navigate("/dashboard");
