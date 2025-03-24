@@ -93,22 +93,6 @@ const Index = () => {
             
             // Create roadmap from roadmap_items
             const roadmapItems = goal.roadmap_items || [];
-            const roadmap = roadmapItems.map(item => {
-              // Try to parse description as tasks if it contains the separator
-              let tasks: string[] = [];
-              if (item.description && item.description.includes('|')) {
-                tasks = item.description.split('|').map(task => task.trim());
-              } else {
-                tasks = [item.description];
-              }
-              
-              return {
-                id: item.id,
-                timePeriod: `Day ${item.day}`,
-                tasks,
-                completed: item.completed
-              };
-            });
             
             // Group roadmap items by day
             const groupedRoadmap = roadmapItems.reduce((acc, item) => {
@@ -137,6 +121,16 @@ const Index = () => {
             // Convert to array
             const finalRoadmap = Object.values(groupedRoadmap);
             
+            // Transform tasks from Supabase format to match our app's Task type
+            const transformedTasks = (tasksData || []).map(task => ({
+              id: task.id,
+              goalId: task.goal_id,
+              description: task.description,
+              day: task.day,
+              completed: task.completed,
+              createdAt: task.created_at
+            }));
+            
             return {
               id: goal.id,
               title: goal.title,
@@ -146,7 +140,7 @@ const Index = () => {
               progress: progressValue,
               createdAt: goal.created_at,
               roadmap: finalRoadmap,
-              tasks: tasksData || []
+              tasks: transformedTasks
             };
           }));
           

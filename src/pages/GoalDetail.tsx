@@ -140,6 +140,16 @@ const GoalDetail = () => {
               return dayA - dayB;
             });
             
+            // Transform Supabase task format to match our application Task type
+            const transformedTasks: Task[] = (tasksData || []).map(task => ({
+              id: task.id,
+              goalId: task.goal_id,
+              description: task.description,
+              day: task.day,
+              completed: task.completed,
+              createdAt: task.created_at
+            }));
+            
             const fullGoal: Goal = {
               id: goalData.id,
               title: goalData.title,
@@ -149,12 +159,12 @@ const GoalDetail = () => {
               progress: progressValue,
               createdAt: goalData.created_at,
               roadmap: finalRoadmap,
-              tasks: tasksData || []
+              tasks: transformedTasks
             };
             
             console.log("Constructed goal:", fullGoal);
             setGoal(fullGoal);
-            setTasks(tasksData || []);
+            setTasks(transformedTasks);
           }
         } else {
           // No user, use local storage
@@ -194,7 +204,17 @@ const GoalDetail = () => {
         return;
       }
       
-      setTasks(tasksData || []);
+      // Transform Supabase task format to match our application Task type
+      const transformedTasks: Task[] = (tasksData || []).map(task => ({
+        id: task.id,
+        goalId: task.goal_id,
+        description: task.description,
+        day: task.day,
+        completed: task.completed,
+        createdAt: task.created_at
+      }));
+      
+      setTasks(transformedTasks);
       
       // Calculate progress
       const completedTasks = tasksData ? tasksData.filter(task => task.completed).length : 0;

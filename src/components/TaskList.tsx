@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Task, Goal } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -118,7 +117,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
       
       if (user) {
         try {
-          // Save tasks to Supabase
+          // Convert tasks to the format expected by Supabase
           const tasksToInsert = newTasks.map(task => ({
             goal_id: task.goalId,
             description: task.description,
