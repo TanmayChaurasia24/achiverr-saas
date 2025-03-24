@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Task, Goal } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -139,7 +140,16 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
               saveTask(task);
             });
           } else {
-            console.log("Tasks saved to Supabase:", data);
+            // Transform the returned tasks to match our application Task type
+            const transformedTasks = data.map(task => ({
+              id: task.id,
+              goalId: task.goal_id,
+              description: task.description,
+              day: task.day,
+              completed: task.completed,
+              createdAt: task.created_at
+            }));
+            console.log("Tasks saved to Supabase:", transformedTasks);
           }
         } catch (error) {
           console.error("Exception saving tasks:", error);

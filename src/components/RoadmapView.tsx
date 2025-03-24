@@ -15,6 +15,9 @@ export function RoadmapView({ goal }: RoadmapViewProps) {
   const [loading, setLoading] = useState(false);
   const { roadmap, progress } = goal;
   
+  // Log roadmap for debugging
+  console.log("Roadmap in RoadmapView:", roadmap);
+  
   // Extract distinct time periods from roadmap
   const timePeriods = roadmap
     .map(item => item.timePeriod)

@@ -1,8 +1,6 @@
-
 import { Goal, RoadmapItem, Task } from "@/types";
 
-const apikey = "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";
-
+const apikey = import.meta.env.VITE_OPENROUTER_API_KEY || "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";
 
 export const generateRoadmap = async (
   goalTitle: string,
@@ -16,7 +14,7 @@ export const generateRoadmap = async (
   }
 
   try {
-  
+    console.log("Using API key:", apikey);
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -145,6 +143,7 @@ export const generateDailyTasks = async (
   console.log("Generating tasks for day:", day, "of goal:", goal.title);
 
   try {
+    console.log("Using API key for tasks:", apikey);
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
