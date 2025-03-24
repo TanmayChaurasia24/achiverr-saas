@@ -23,12 +23,19 @@ export function RoadmapView({ goal }: RoadmapViewProps) {
     .map(item => item.timePeriod)
     .filter((value, index, self) => self.indexOf(value) === index);
   
-  // Group roadmap items by timePeriod
+  // Group roadmap items by timePeriod with proper day formatting
   const groupedRoadmap = timePeriods.map(period => {
     const items = roadmap.filter(item => item.timePeriod === period);
     
     // Extract day ranges from the timePeriod (e.g., "Day 1-3" -> [1, 3])
-    const dayMatch = period.match(/Day\s+(\d+)(?:-(\d+))?/i);
+    // First try to match patterns like "Day 1-3" or "Days 1-3"
+    let dayMatch = period.match(/Days?\s+(\d+)(?:-(\d+))?/i);
+    
+    // If no match, try to match just numbers (e.g., "1" or "1-3")
+    if (!dayMatch) {
+      dayMatch = period.match(/(\d+)(?:-(\d+))?/);
+    }
+    
     let startDay = 1;
     let endDay = 1;
     
@@ -37,8 +44,13 @@ export function RoadmapView({ goal }: RoadmapViewProps) {
       endDay = dayMatch[2] ? parseInt(dayMatch[2]) : startDay;
     }
     
+    // Format the time period to ensure it's in the format "Day 1-3" or "Day 4"
+    const formattedTimePeriod = endDay > startDay 
+      ? `Day ${startDay}-${endDay}`
+      : `Day ${startDay}`;
+    
     return {
-      timePeriod: period,
+      timePeriod: formattedTimePeriod,
       days: [startDay, endDay],
       items: items
     };

@@ -1,3 +1,4 @@
+
 import { Goal, RoadmapItem, Task } from "@/types";
 
 const apikey = import.meta.env.VITE_OPENROUTER_API_KEY || "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";
@@ -138,12 +139,33 @@ function getFallbackRoadmap(timeframe: number): RoadmapItem[] {
 
 export const generateDailyTasks = async (
   goal: Goal,
-  day: number
+  day: number,
+  roadmapGuidance: string[] = []
 ): Promise<Task[]> => {
   console.log("Generating tasks for day:", day, "of goal:", goal.title);
+  console.log("Using roadmap guidance:", roadmapGuidance);
 
   try {
     console.log("Using API key for tasks:", apikey);
+    
+    // Find the relevant roadmap items for this day
+    const relevantRoadmapItems = goal.roadmap.filter(item => {
+      // Extract day range from timePeriod
+      const dayMatch = item.timePeriod.match(/Day\s+(\d+)(?:-(\d+))?/i);
+      if (!dayMatch) return false;
+      
+      const startDay = parseInt(dayMatch[1]);
+      const endDay = dayMatch[2] ? parseInt(dayMatch[2]) : startDay;
+      
+      // Check if the current day is within this range
+      return day >= startDay && day <= endDay;
+    });
+    
+    // Create a context string from the roadmap guidance
+    const roadmapContext = relevantRoadmapItems.length > 0 
+      ? `According to the roadmap, on ${relevantRoadmapItems[0].timePeriod} you should focus on: ${relevantRoadmapItems.flatMap(item => item.tasks || []).join(", ")}`
+      : '';
+    
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -164,14 +186,17 @@ export const generateDailyTasks = async (
                 **Goal Description:** ${goal.description || "No specific description provided"}
                 **Overall Timeframe:** ${goal.timeframe} days
                 **Current Progress:** ${goal.progress}% complete
+                
+                ${roadmapContext ? `**Roadmap Guidance for This Period:** ${roadmapContext}` : ''}
 
                 **Task Generation Guidelines:**
-                1. Create 3-5 specific, actionable tasks for Day ${day}.
+                1. Create 3-5 specific, actionable tasks for Day ${day} that align with the roadmap guidance.
                 2. Tasks should be appropriate for the current stage of the goal (${day} out of ${goal.timeframe} days).
                 3. Each task should be clear, specific, and achievable within a day.
                 4. If it's an early day (first 25% of timeline): focus on research, planning, and setup.
                 5. If it's a middle day (25-75% of timeline): focus on implementation and execution.
                 6. If it's a late day (last 75% of timeline): focus on refinement, testing, and review.
+                7. Tasks should directly relate to the roadmap items for this day or period.
 
                 Return ONLY a clean JSON array of task descriptions:
                 ["Task 1 description", "Task 2 description", "Task 3 description"]
@@ -211,12 +236,12 @@ export const generateDailyTasks = async (
       parsedTasks = JSON.parse(cleanedTasksData);
     } catch (error) {
       console.error("Error parsing tasks data:", error);
-      return fallbackTasks(goal, day);
+      return fallbackTasks(goal, day, roadmapGuidance);
     }
     
     if (!Array.isArray(parsedTasks)) {
       console.error("Parsed tasks data is not an array:", parsedTasks);
-      return fallbackTasks(goal, day);
+      return fallbackTasks(goal, day, roadmapGuidance);
     }
     
     // Create task objects
@@ -234,30 +259,58 @@ export const generateDailyTasks = async (
   } catch (error) {
     console.error("Error generating daily tasks:", error);
     // Fallback to some basic tasks if API fails
-    return fallbackTasks(goal, day);
+    return fallbackTasks(goal, day, roadmapGuidance);
   }
 };
 
 // Fallback function for when the API fails
-function fallbackTasks(goal: Goal, day: number): Task[] {
-  console.log("Using fallback tasks generation");
-  const tasksCount = Math.floor(Math.random() * 3) + 2; // 2-4 tasks
+function fallbackTasks(goal: Goal, day: number, roadmapGuidance: string[] = []): Task[] {
+  console.log("Using fallback tasks generation with roadmap guidance:", roadmapGuidance);
+  
+  // Use roadmap guidance if available, otherwise generate generic tasks
   const tasks: Task[] = [];
   
-  for (let i = 1; i <= tasksCount; i++) {
+  if (roadmapGuidance && roadmapGuidance.length > 0) {
+    // Create tasks based on roadmap guidance
+    roadmapGuidance.slice(0, 3).forEach(guidance => {
+      tasks.push({
+        id: crypto.randomUUID(),
+        goalId: goal.id,
+        description: `${guidance}`,
+        day: day,
+        completed: false,
+        createdAt: new Date().toISOString(),
+      });
+    });
+    
+    // Add one generic task
     tasks.push({
       id: crypto.randomUUID(),
       goalId: goal.id,
-      description: `Task ${i} for day ${day}: ${getRandomTask(
-        goal.title,
-        goal.progress,
-        day,
-        goal.timeframe
-      )}`,
+      description: `Track progress and review what you've learned today`,
       day: day,
       completed: false,
       createdAt: new Date().toISOString(),
     });
+  } else {
+    // Generate generic tasks if no roadmap guidance is available
+    const tasksCount = Math.floor(Math.random() * 3) + 2; // 2-4 tasks
+    
+    for (let i = 1; i <= tasksCount; i++) {
+      tasks.push({
+        id: crypto.randomUUID(),
+        goalId: goal.id,
+        description: `Task ${i} for day ${day}: ${getRandomTask(
+          goal.title,
+          goal.progress,
+          day,
+          goal.timeframe
+        )}`,
+        day: day,
+        completed: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
   }
   
   return tasks;

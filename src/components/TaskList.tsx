@@ -5,12 +5,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { markTaskComplete, saveTask } from "@/utils/storage";
 import { generateDailyTasks } from "@/utils/api";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ListChecks, Loader2, PlusCircle, AlertCircle } from "lucide-react";
+import { CalendarDays, ListChecks, Loader2, PlusCircle, AlertCircle, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { format, addDays } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
 
 interface TaskListProps {
   goal: Goal;
@@ -22,6 +26,9 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [nextDay, setNextDay] = useState<number | null>(null);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(tasks.length === 0);
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [isDateOpen, setIsDateOpen] = useState(false);
   const { user } = useAuth();
   
   const currentDay = Math.min(
@@ -43,6 +50,13 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     acc[task.day].push(task);
     return acc;
   }, {});
+  
+  useEffect(() => {
+    // Show date picker if no tasks exist
+    if (tasks.length === 0) {
+      setShowStartDatePicker(true);
+    }
+  }, [tasks]);
   
   useEffect(() => {
     // Check if all tasks for the current day are completed
@@ -113,7 +127,26 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     
     try {
       console.log("Generating tasks for day:", day);
-      const newTasks = await generateDailyTasks(goal, day);
+      
+      // Get relevant roadmap items to inform task generation
+      const relevantRoadmapItems = goal.roadmap.filter(item => {
+        // Extract day range from timePeriod
+        const dayMatch = item.timePeriod.match(/Day\s+(\d+)(?:-(\d+))?/i);
+        if (!dayMatch) return false;
+        
+        const startDay = parseInt(dayMatch[1]);
+        const endDay = dayMatch[2] ? parseInt(dayMatch[2]) : startDay;
+        
+        // Check if the current day is within this range
+        return day >= startDay && day <= endDay;
+      });
+      
+      // Extract tasks from the roadmap to guide the API
+      const roadmapGuidance = relevantRoadmapItems.flatMap(item => item.tasks || []);
+      console.log("Roadmap guidance for task generation:", roadmapGuidance);
+      
+      // Pass additional context to the API
+      const newTasks = await generateDailyTasks(goal, day, roadmapGuidance);
       console.log("Generated tasks:", newTasks);
       
       if (user) {
@@ -175,6 +208,25 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     }
   };
 
+  const handleStartJourney = () => {
+    if (!startDate) {
+      toast.error("Please select a start date");
+      return;
+    }
+    
+    // Calculate the day number based on the selected start date
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // If start date is in the past, we're on a later day, otherwise day 1
+    const dayNum = startDate <= today ? diffDays + 1 : 1;
+    
+    console.log("Starting journey from day:", dayNum);
+    setShowStartDatePicker(false);
+    generateTasksForDay(dayNum);
+  };
+
   const handleGenerateTasksForToday = () => {
     generateTasksForDay(currentDay);
   };
@@ -186,23 +238,78 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
           <ListChecks className="mr-2 h-5 w-5" /> Tasks
         </h2>
         
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleGenerateTasksForToday}
-          disabled={loading}
-          className="group"
-        >
-          {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <PlusCircle className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
-          )}
-          Generate Tasks for Today
-        </Button>
+        {!showStartDatePicker && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateTasksForToday}
+            disabled={loading}
+            className="group"
+          >
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <PlusCircle className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+            )}
+            Generate Tasks for Today
+          </Button>
+        )}
       </div>
       
-      {Object.keys(tasksByDay).length === 0 ? (
+      {showStartDatePicker ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>When would you like to start your journey?</CardTitle>
+            <CardDescription>
+              Select a date to begin tracking your progress and generating daily tasks.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center space-x-2">
+                <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : "Select a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        setStartDate(date);
+                        setIsDateOpen(false);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {startDate && startDate < new Date() 
+                  ? `You are starting ${format(startDate, "PPP")}, which means you're on day ${
+                      Math.ceil(Math.abs(new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+                    } of your journey.`
+                  : "Starting today will begin with day 1 of your journey."}
+              </div>
+            </div>
+            
+            <Button 
+              onClick={handleStartJourney} 
+              disabled={loading || !startDate}
+              className="w-full"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Start My Journey
+            </Button>
+          </CardContent>
+        </Card>
+      ) : Object.keys(tasksByDay).length === 0 ? (
         <Card className="bg-accent/5">
           <CardContent className="pt-6 text-center">
             <p className="text-muted-foreground">
