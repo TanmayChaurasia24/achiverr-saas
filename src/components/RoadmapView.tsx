@@ -73,7 +73,7 @@ export function RoadmapView({ goal }: RoadmapViewProps) {
       </div>
 
       <div className="space-y-4">
-        {groupedRoadmap.length === 0 ? (
+        {roadmap.length === 0 ? (
           <Card className="bg-accent/5">
             <CardContent className="pt-6 text-center">
               <p className="text-muted-foreground">
