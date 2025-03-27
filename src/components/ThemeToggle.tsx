@@ -7,16 +7,17 @@ import { motion } from "framer-motion";
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
+  const currentTheme = theme || "light"; // Fallback to light if theme is undefined
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
       className={cn("rounded-full group", className)}
     >
       <motion.div
-        animate={{ rotate: theme === "light" ? 0 : 180 }}
+        animate={{ rotate: currentTheme === "light" ? 0 : 180 }}
         transition={{ duration: 0.5, ease: "easeInOut" }}
       >
         <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 group-hover:text-amber-400" />
