@@ -13,6 +13,7 @@ import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 // Protected route component that redirects to login if user is not authenticated
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -38,6 +39,8 @@ const App = () => {
   const queryClient = new QueryClient();
   
   return (
+    <ThemeProvider>
+
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -68,6 +71,7 @@ const App = () => {
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 
