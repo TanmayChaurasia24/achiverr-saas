@@ -1,12 +1,19 @@
-
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Loader2 } from "lucide-react";
-import { generateRoadmap } from "@/utils/api";
+import axios from "axios";
 import { saveGoal } from "@/utils/storage";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -27,55 +34,61 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title || !timeframe) {
       toast.error("Please provide a title and timeframe for your goal");
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      console.log("Generating roadmap for:", { title, description, timeframe: parseInt(timeframe) });
-      
-      // Generate roadmap using AI
-      const roadmap = await generateRoadmap(
+      console.log("Generating roadmap for:", {
         title,
         description,
-        parseInt(timeframe)
+        timeframe: parseInt(timeframe),
+      });
+
+      // Generate roadmap using AI
+      const roadmap: [] = await axios.post(
+        `${process.env.BACKEND_URL}/api/roadmap/generate`,
+        {
+          title,
+          description,
+          timeframe,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
-      
+
       console.log("Generated roadmap:", roadmap);
-      
+
       if (!roadmap || roadmap.length === 0) {
         toast.error("Failed to generate roadmap. Please try again.");
         setLoading(false);
         return;
       }
-      
+
       const deadline = new Date();
       deadline.setDate(deadline.getDate() + parseInt(timeframe));
-      
+
       // Create the new goal object
       const newGoal: Goal = {
-        id: crypto.randomUUID(),
+        userId: user.id,
         title,
         description,
         timeframe: parseInt(timeframe),
-        deadline: deadline.toISOString(),
-        progress: 0,
-        roadmap: roadmap || [],
-        createdAt: new Date().toISOString(),
-        tasks: []
       };
-      
+
       console.log("Saving goal:", newGoal);
-      
-      // Save to local storage
-      saveGoal(newGoal);
-      
+
+      // save goal to database
+
       toast.success("Goal created successfully!");
-      
+
       setTitle("");
       setDescription("");
       setTimeframe("30");
@@ -92,10 +105,7 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Button className="group animate-fade-in">
             <PlusCircle className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
             Create New Goal
@@ -106,7 +116,8 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         <DialogHeader>
           <DialogTitle>Create a New Goal</DialogTitle>
           <DialogDescription>
-            Define your goal and timeframe. Our AI will help create a roadmap for you.
+            Define your goal and timeframe. Our AI will help create a roadmap
+            for you.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
@@ -144,18 +155,18 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
             />
           </div>
           <DialogFooter>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={loading || !title || !timeframe}
               className="w-full sm:w-auto"
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Generating Roadmap...
                 </>
               ) : (
-                'Create Goal'
+                "Create Goal"
               )}
             </Button>
           </DialogFooter>

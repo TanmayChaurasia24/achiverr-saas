@@ -1,14 +1,9 @@
 
 export interface Goal {
-  id: string;
+  userId: string
   title: string;
   description: string;
-  timeframe: number; // days
-  createdAt: string;
-  roadmap: RoadmapItem[];
-  progress: number; // 0-100
-  tasks: Task[];
-  deadline: string; // Added deadline property
+  timeframe: number
 }
 
 export interface RoadmapItem {

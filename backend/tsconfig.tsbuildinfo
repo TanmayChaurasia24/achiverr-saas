@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/controllers/users.controller.ts","./src/controllers/goals.controller.ts","./src/controllers/roadmap.controller.ts","./src/controllers/todo.controller.ts","./src/routes/goals.route.ts","./src/routes/roadmap.route.ts","./src/routes/todo.route.ts","./src/routes/user.route.ts"],"version":"5.6.3"}
