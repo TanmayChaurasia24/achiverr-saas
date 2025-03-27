@@ -59,7 +59,7 @@ model Task {
   goalId      String
   description String
   day         Int
-  completed   Boolean @default(false)
+  completed   Boolean? @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
