@@ -1,7 +1,6 @@
 
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useTheme } from '@/components/ThemeProvider';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -14,13 +13,7 @@ interface GoalModelProps {
 export function GoalModel({ progress = 0, size = 1, animated = true }: GoalModelProps) {
   const targetRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
-  const { theme = 'system' } = useTheme() || {};
   
-  // Determine actual theme based on system preference if needed
-  const actualTheme = theme === 'system' 
-    ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') 
-    : theme;
-
   // Animation logic
   useFrame((state, delta) => {
     if (!animated || !targetRef.current) return;
@@ -30,10 +23,10 @@ export function GoalModel({ progress = 0, size = 1, animated = true }: GoalModel
     }
   });
 
-  // Colors based on theme
-  const targetColor = actualTheme === 'dark' ? '#4f6bff' : '#3b57e0';
-  const ringColor = actualTheme === 'dark' ? '#6486ff' : '#5373eb';
-  const progressColor = actualTheme === 'dark' ? '#64ffb4' : '#00e891';
+  // Dark theme colors
+  const targetColor = '#4f6bff';
+  const ringColor = '#6486ff';
+  const progressColor = '#64ffb4';
 
   return (
     <group ref={targetRef}>
@@ -80,7 +73,7 @@ export function GoalModel({ progress = 0, size = 1, animated = true }: GoalModel
       {/* Progress text */}
       <Text
         position={[0, 0, size * 1.1]}
-        color={actualTheme === 'dark' ? 'white' : 'black'}
+        color="white"
         fontSize={size * 0.5}
         font="/fonts/Inter-Bold.woff"
         anchorX="center"

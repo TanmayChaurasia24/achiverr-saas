@@ -39,7 +39,7 @@ const App = () => {
   const queryClient = new QueryClient();
   
   return (
-    <ThemeProvider defaultTheme="system" storageKey="achiverr-theme">
+    <ThemeProvider storageKey="achiverr-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
