@@ -29,9 +29,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { SceneWrapper } from "@/components/3d/SceneWrapper";
-import { GoalModel } from "@/components/3d/GoalModel";
-import { RoadmapModel } from "@/components/3d/RoadmapModel";
 import { FadeIn, ScaleIn, StaggerContainer, StaggerItem } from "@/components/ui/animations";
 
 const GoalDetail = () => {
@@ -163,11 +160,6 @@ const GoalDetail = () => {
           <Card className="enhanced-card">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row md:items-center gap-6">
-                <div className="h-40 w-40 mx-auto md:mx-0">
-                  <SceneWrapper className="h-40 w-40">
-                    <GoalModel progress={goal.progress || 0} size={1.3} />
-                  </SceneWrapper>
-                </div>
                 <div className="flex-1">
                   <h1 className="text-3xl font-bold tracking-tight mb-2">{goal.title}</h1>
                   <p className="text-muted-foreground mb-4">{goal.description}</p>
@@ -215,18 +207,7 @@ const GoalDetail = () => {
         <FadeIn delay={0.2}>
           <Card className="enhanced-card h-full">
             <CardContent className="p-6">
-              <h3 className="text-lg font-medium mb-4">Roadmap Overview</h3>
-              
-              <div className="h-48">
-                <SceneWrapper className="h-48 w-full" autoRotate={false}>
-                  <RoadmapModel 
-                    steps={goal.roadmap.length} 
-                    currentStep={Math.floor((goal.progress || 0) * goal.roadmap.length / 100)} 
-                    size={0.7} 
-                  />
-                </SceneWrapper>
-              </div>
-              
+              <h3 className="text-lg font-medium mb-4">Roadmap Overview</h3>              
               <div className="mt-2">
                 <p className="text-sm text-muted-foreground">
                   Your journey is divided into {goal.roadmap.length} steps.

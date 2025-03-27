@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
 import { CheckCircle, BarChart, Shield, Sparkles, DollarSign, Zap, Diamond, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { SceneWrapper } from '@/components/3d/SceneWrapper';
-import { GoalModel } from '@/components/3d/GoalModel';
+
 import { FadeIn, StaggerContainer, StaggerItem, HoverCard } from '@/components/ui/animations';
 
 const PricingTier = ({ 
@@ -36,11 +35,6 @@ const PricingTier = ({
       )}
       
       <div className="mb-5">
-        <div className="h-20 w-20 mx-auto mb-3 glow">
-          <SceneWrapper className="h-20 w-20">
-            <GoalModel progress={modelProgress} size={0.8} animated={true} />
-          </SceneWrapper>
-        </div>
         <h3 className="text-xl font-semibold mb-2 text-center">{title}</h3>
         <div className="mb-3 text-center">
           <span className="text-3xl font-bold">{price}</span>
@@ -189,11 +183,6 @@ const Pricing = () => {
         </div>
         
         <FadeIn delay={0.3} className="mt-24 text-center bg-gradient-to-r from-secondary/50 to-accent/10 py-12 px-4 rounded-xl max-w-3xl mx-auto enhanced-card">
-          <div className="h-24 w-24 mx-auto mb-6 glow">
-            <SceneWrapper className="h-24 w-24">
-              <GoalModel progress={100} size={1} />
-            </SceneWrapper>
-          </div>
           <h2 className="text-2xl font-bold mb-4">Ready to transform your goals into achievements?</h2>
           <p className="text-muted-foreground mb-6">
             Start with our free plan today, no credit card required.

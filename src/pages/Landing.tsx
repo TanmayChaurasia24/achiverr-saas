@@ -2,10 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { SceneWrapper } from '@/components/3d/SceneWrapper';
-import { GoalModel } from '@/components/3d/GoalModel';
-import { RoadmapModel } from '@/components/3d/RoadmapModel';
-import { TasksModel } from '@/components/3d/TasksModel';
+
 import { FadeIn, ScaleIn, StaggerContainer, StaggerItem, AnimatedGradient, HoverCard } from '@/components/ui/animations';
 import { 
   Target, 
@@ -74,14 +71,14 @@ const Landing = () => {
               </h1>
             </StaggerItem>
             
-            <StaggerItem delay={0.1}>
+            <StaggerItem>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
                 Achiverr helps you turn your dreams into actionable plans with AI-powered roadmaps 
                 and daily tasks tailored to your goals.
               </p>
             </StaggerItem>
             
-            <StaggerItem delay={0.2}>
+            <StaggerItem>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="gap-2 group bg-accent hover:bg-accent/90 btn-hover">
                   <Link to="/dashboard">
@@ -105,25 +102,16 @@ const Landing = () => {
             <div className="glass rounded-2xl overflow-hidden p-6">
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="glow">
-                  <SceneWrapper presentationMode>
-                    <GoalModel progress={75} size={1.2} />
-                  </SceneWrapper>
                   <h3 className="text-lg font-medium mt-4">Track Progress</h3>
                   <p className="text-muted-foreground text-sm">See your goals evolve in real-time</p>
                 </div>
                 
                 <div className="glow">
-                  <SceneWrapper presentationMode>
-                    <RoadmapModel steps={5} currentStep={2} size={0.8} />
-                  </SceneWrapper>
                   <h3 className="text-lg font-medium mt-4">Follow Roadmaps</h3>
                   <p className="text-muted-foreground text-sm">Clear milestones to guide your journey</p>
                 </div>
                 
                 <div className="glow">
-                  <SceneWrapper presentationMode>
-                    <TasksModel completedTasks={3} totalTasks={5} size={0.8} />
-                  </SceneWrapper>
                   <h3 className="text-lg font-medium mt-4">Complete Tasks</h3>
                   <p className="text-muted-foreground text-sm">Daily actions toward your success</p>
                 </div>
@@ -202,9 +190,6 @@ const Landing = () => {
             <div className="grid md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
               <div>
                 <div className="glass rounded-2xl overflow-hidden">
-                  <SceneWrapper className="h-80 w-full" autoRotate={false} enableZoom>
-                    <RoadmapModel steps={7} currentStep={3} size={1} />
-                  </SceneWrapper>
                 </div>
               </div>
               <div className="space-y-6">

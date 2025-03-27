@@ -13,9 +13,7 @@ import { AIGoalSuggestions } from "@/components/AIGoalSuggestions";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { SceneWrapper } from "@/components/3d/SceneWrapper";
-import { GoalModel } from "@/components/3d/GoalModel";
-import { TasksModel } from "@/components/3d/TasksModel";
+
 import { FadeIn, ScaleIn, StaggerContainer, StaggerItem, HoverCard } from "@/components/ui/animations";
 
 const Dashboard = () => {
@@ -99,11 +97,6 @@ const Dashboard = () => {
                       {activeGoals === 0 ? "No goals yet" : `${activeGoals} goal${activeGoals !== 1 ? 's' : ''} in progress`}
                     </p>
                   </div>
-                  <div className="h-24 w-24">
-                    <SceneWrapper className="h-24 w-24">
-                      <GoalModel progress={0} size={0.8} />
-                    </SceneWrapper>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -127,15 +120,6 @@ const Dashboard = () => {
                         : "No tasks yet"}
                     </p>
                   </div>
-                  <div className="h-24 w-24">
-                    <SceneWrapper className="h-24 w-24">
-                      <TasksModel 
-                        completedTasks={Math.min(completedTasks, 5)} 
-                        totalTasks={Math.min(totalTasks, 5)} 
-                        size={0.6} 
-                      />
-                    </SceneWrapper>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -158,11 +142,6 @@ const Dashboard = () => {
                     <p className="text-xs text-muted-foreground mt-1">
                       Overall goal completion
                     </p>
-                  </div>
-                  <div className="h-24 w-24">
-                    <SceneWrapper className="h-24 w-24">
-                      <GoalModel progress={averageProgress} size={0.8} />
-                    </SceneWrapper>
                   </div>
                 </div>
               </CardContent>
