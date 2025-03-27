@@ -51,7 +51,7 @@ const Landing = () => {
             Pricing
           </Link>
           <Button asChild variant="outline" size="sm" className="btn-hover">
-            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/dashboard">dashboard</Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="btn-hover">
             <Link to="/login">Sign In</Link>
