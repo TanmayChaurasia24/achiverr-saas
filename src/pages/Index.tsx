@@ -46,21 +46,21 @@ const Dashboard = () => {
     navigate(`/goals/${goalId}`);
   };
   
-  // Calculate some basic metrics
-  const activeGoals = goals.length;
-  const completedTasks = goals.reduce((total, goal) => {
-    const completed = goal.tasks?.filter(task => task.completed)?.length || 0;
-    return total + completed;
-  }, 0);
+  // // Calculate some basic metrics
+  // const activeGoals = goals.length;
+  // const completedTasks = goals.reduce((total, goal) => {
+  //   const completed = goal.tasks?.filter(task => task.completed)?.length || 0;
+  //   return total + completed;
+  // }, 0);
   
-  const totalTasks = goals.reduce((total, goal) => {
-    return total + (goal.tasks?.length || 0);
-  }, 0);
+  // const totalTasks = goals.reduce((total, goal) => {
+  //   return total + (goal.tasks?.length || 0);
+  // }, 0);
   
-  // Calculate average progress
-  const averageProgress = activeGoals 
-    ? Math.round(goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / activeGoals) 
-    : 0;
+  // // Calculate average progress
+  // const averageProgress = activeGoals 
+  //   ? Math.round(goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / activeGoals) 
+  //   : 0;
   
   // Get user name from profile if available
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "there";
@@ -92,10 +92,10 @@ const Dashboard = () => {
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold">{activeGoals}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <div className="text-2xl font-bold">{10}</div>
+                    {/* <p className="text-xs text-muted-foreground mt-1">
                       {activeGoals === 0 ? "No goals yet" : `${activeGoals} goal${activeGoals !== 1 ? 's' : ''} in progress`}
-                    </p>
+                    </p> */}
                   </div>
                 </div>
               </CardContent>
@@ -113,12 +113,12 @@ const Dashboard = () => {
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold">{completedTasks}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <div className="text-2xl font-bold">{10}</div>
+                    {/* <p className="text-xs text-muted-foreground mt-1">
                       {totalTasks > 0 
                         ? `${completedTasks}/${totalTasks} tasks completed` 
                         : "No tasks yet"}
-                    </p>
+                    </p> */}
                   </div>
                 </div>
               </CardContent>
@@ -137,7 +137,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-2xl font-bold">
-                      {averageProgress}%
+                      {50}%
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Overall goal completion
@@ -171,7 +171,7 @@ const Dashboard = () => {
               ) : goals.length > 0 ? (
                 <StaggerContainer className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {goals.map((goal) => (
-                    <StaggerItem key={goal.id}>
+                    <StaggerItem key={Math.random()}>
                       <GoalCard 
                         goal={goal} 
                         onSelect={handleSelectGoal}

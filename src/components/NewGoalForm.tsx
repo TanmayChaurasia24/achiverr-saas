@@ -72,9 +72,6 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         return;
       }
 
-      const deadline = new Date();
-      deadline.setDate(deadline.getDate() + parseInt(timeframe));
-
       // Create the new goal object
       const newGoal: Goal = {
         userId: user.id,
@@ -86,8 +83,46 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
       console.log("Saving goal:", newGoal);
 
       // save goal to database
+      const goalResponse = await axios.post(
+        `${process.env.BACKEND_URL}/api/goal/create/${user.id}`,
+        {
+          title,
+          description,
+          timeframe,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      toast.success("Goal created successfully!");
+      if (!goalResponse.data) {
+        toast.error("failed to create goal!");
+        setLoading(false);
+        return;
+      }
+
+      // save the ai generated roadmap to the database
+      const roadmapReponse = await axios.post(
+        `${process.env.BACKEND_URL}/api/roadmap/create/${goalResponse.data.goalId}`,
+        {
+          roadmapitems: roadmap,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if(!roadmapReponse.data) {
+        toast.error("failed to create roadmap!")
+        setLoading(false);
+        return;
+      }
+
+      toast.success("Goal with roadmap created successfully!");
 
       setTitle("");
       setDescription("");

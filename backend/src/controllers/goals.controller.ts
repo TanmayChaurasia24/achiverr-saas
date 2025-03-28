@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 export const createGoal = async (req: Request, res: Response): Promise<any> => {
   try {
     const { userId } = req.params;
-    const { title, description, timeframe, deadline } = req.body;
+    const { title, description, timeframe } = req.body;
 
-    if (!userId || !title || !description || !timeframe || !deadline) {
+    if (!userId || !title || !description || !timeframe) {
       return res.status(400).json({ message: "Please fill in all fields" });
     }
 
@@ -30,7 +30,6 @@ export const createGoal = async (req: Request, res: Response): Promise<any> => {
         title: title,
         description: description,
         timeframe: timeframe,
-        deadline: deadline,
         userId: userId,
       },
     });
@@ -41,11 +40,50 @@ export const createGoal = async (req: Request, res: Response): Promise<any> => {
 
     return res.status(201).json({
       message: "goal created successfully",
+      goalId: createGoal.id,
       data: createGoal,
     });
   } catch (error: any) {
     return res.status(500).json({
       message: "error while creating goals",
+      error: error.message,
+    });
+  }
+};
+
+export const getGoal = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { goalId } = req.params;
+
+    if (!goalId) {
+      return res.status(400).json({
+        message: "goal id is required",
+      });
+    }
+
+    const goal = await prisma.goal.findUnique({
+      where: {
+        id: goalId,
+      },
+      include: {
+        roadmapItems: true,
+        tasks: true,
+      },
+    });
+
+    if (!goal) {
+      return res.status(404).json({
+        message: "goal not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "goal fetched successfully",
+      goal,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: "error while getting goal",
       error: error.message,
     });
   }

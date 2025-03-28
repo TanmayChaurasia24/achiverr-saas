@@ -10,29 +10,39 @@ export const createRoadmapDatabase = async (
 ): Promise<any> => {
   try {
     const { goalId } = req.params;
-    const { day, description } = req.body;
-
-    if (!goalId || !day || !description) {
+    const roadmapitems = req.body;
+    
+    if (!Array.isArray(roadmapitems)|| !goalId || roadmapitems.length === 0) {
       return res.status(400).json({ message: "Please fill all fields." });
     }
+    
+    const Currentroadmap = [];
+    
+    for(const item of roadmapitems) {
+      const {timeperiod, tasks} = item;
 
-    const roadmap = await prisma.roadmapItem.create({
-      data: {
-        goalId,
-        day,
-        description,
-      },
-    });
+      if (!timeperiod || !Array.isArray(tasks) || tasks.length === 0) {
+        return res.status(400).json({ message: "Each roadmap item must have a time period and tasks." });
+      }
 
-    if (!roadmap) {
-      return res
-        .status(400)
-        .json({ message: "Failed to create roadmap item." });
+      const roadmapitem = await prisma.roadmapItem.create({
+        data: {
+          goalId,
+          day: timeperiod,
+          description: tasks.join(", "),  
+        },
+      });
+
+      if (!roadmapitem) {
+        return res.status(400).json({ message: "Failed to create roadmap item." });
+      }
+
+      Currentroadmap.push(roadmapitem);
     }
 
     return res.status(201).json({
       message: "roadmap created",
-      roadmap,
+      Currentroadmap
     });
   } catch (error) {
     return res.status(500).json({
