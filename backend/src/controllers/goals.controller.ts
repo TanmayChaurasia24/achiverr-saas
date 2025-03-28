@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 
 const prisma = new PrismaClient();
@@ -88,3 +88,41 @@ export const getGoal = async (req: Request, res: Response): Promise<any> => {
     });
   }
 };
+
+export const goalsBulk = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { userId } = req.body;
+
+    if(!userId) {
+      return res.status(400).json({
+        message: "userId not present",
+        userId: userId
+      })
+    }
+
+    const allGoals = await prisma.goal.findMany({
+      where: {
+        userId,
+      }
+    })
+    
+    if(!allGoals) {
+      return res.status(500).json({
+        message: "error while fetching all goals"
+      })
+    }
+
+    console.log("fetched goals from backend: ", allGoals);
+
+    return res.status(200).json({
+      message: "goals fetched successfully",
+      goals: allGoals,
+    })
+    
+  } catch (error) {
+    return res.status(500).json({
+      message: "error while getting goals",
+      error: error,
+    });
+  }
+}

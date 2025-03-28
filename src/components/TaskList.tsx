@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Task, Goal } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { markTaskComplete, saveTask } from "@/utils/storage";
-import { generateDailyTasks } from "@/utils/api";
+
 import { Button } from "@/components/ui/button";
 import { CalendarDays, ListChecks, Loader2, PlusCircle, AlertCircle, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,17 +27,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [isDateOpen, setIsDateOpen] = useState(false);
   
-  const currentDay = Math.min(
-    Math.max(
-      1,
-      Math.ceil(
-        (new Date().getTime() - new Date(goal.createdAt).getTime()) / 
-        (1000 * 60 * 60 * 24)
-      )
-    ),
-    goal.timeframe
-  );
-  
+  const currentDay = 10
   // Group tasks by day
   const tasksByDay = tasks.reduce<Record<number, Task[]>>((acc, task) => {
     if (!acc[task.day]) {
@@ -120,12 +110,12 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
       console.log("Roadmap guidance for task generation:", roadmapGuidance);
       
       // Pass additional context to the API
-      const newTasks = await generateDailyTasks(goal, day, roadmapGuidance);
+      const newTasks = ["asdas","adsd"]
       console.log("Generated tasks:", newTasks);
       
       // Save to local storage
       newTasks.forEach(task => {
-        saveTask(task);
+        // saveTask(task);
       });
       
       toast.success(`Generated ${newTasks.length} tasks for day ${day}`);

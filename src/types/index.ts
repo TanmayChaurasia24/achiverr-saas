@@ -1,9 +1,14 @@
 
 export interface Goal {
-  userId: string
-  title: string;
-  description: string;
-  timeframe: number
+  id: String;
+  userId: String;
+  title: String;
+  description: String;
+  timeframe: String;
+  createdAt: Date;
+  updatedAt: Date;
+  roadmapItems: RoadmapItem[]
+  tasks:Todo[]
 }
 
 export interface RoadmapItem {
@@ -15,7 +20,7 @@ export interface RoadmapItem {
   description?: string; // Added description property that's used in supabaseHelpers.ts
 }
 
-export interface Task {
+export interface Todo {
   id: string;
   goalId: string;
   description: string;

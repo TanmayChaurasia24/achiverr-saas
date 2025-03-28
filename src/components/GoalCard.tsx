@@ -14,7 +14,7 @@ interface GoalCardProps {
 
 export function GoalCard({ goal, onSelect }: GoalCardProps) {
   // Ensure progress has a value
-  const progress = goal.progress || 0;
+
   
   // Format the creation date properly
   const formatDate = () => {
@@ -52,9 +52,9 @@ export function GoalCard({ goal, onSelect }: GoalCardProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm mb-1">
               <span>Progress</span>
-              <span>{progress}%</span>
+              <span>{10}%</span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={10} className="h-2" />
           </div>
         </CardContent>
         <CardFooter className="flex justify-between border-t bg-muted/20 pt-4">
@@ -65,7 +65,7 @@ export function GoalCard({ goal, onSelect }: GoalCardProps) {
             size="sm"
             variant="ghost"
             className="text-accent hover:text-accent hover:bg-accent/10 group"
-            onClick={() => onSelect(goal.id)}
+            onClick={() => onSelect(goal.id.toString())}
           >
             <span className="mr-1">Details</span>
             <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

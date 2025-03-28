@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 import { FadeIn, ScaleIn, StaggerContainer, StaggerItem, HoverCard } from "@/components/ui/animations";
+import axios from "axios";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -26,14 +27,15 @@ const Dashboard = () => {
     loadGoals();
   }, []);
   
-  const loadGoals = () => {
+  const loadGoals = async() => {
     setLoading(true);
     
     try {
-      // Load goals from localStorage
-      const storedGoals = getGoals();
-      console.log("Stored goals:", storedGoals);
-      setGoals(storedGoals);
+      console.log("user details: ", user);
+      
+      const fetchAllGoals = await axios.get(`${import.meta.env.BACKEND_URL}/api/goal/bulk/${user?.id}`)
+      console.log("fetched goals from backend: ", fetchAllGoals);
+      setGoals(fetchAllGoals.data.goals);
     } catch (error) {
       console.error("Error loading goals:", error);
       toast.error("Failed to load goals");
@@ -45,24 +47,7 @@ const Dashboard = () => {
   const handleSelectGoal = (goalId: string) => {
     navigate(`/goals/${goalId}`);
   };
-  
-  // // Calculate some basic metrics
-  // const activeGoals = goals.length;
-  // const completedTasks = goals.reduce((total, goal) => {
-  //   const completed = goal.tasks?.filter(task => task.completed)?.length || 0;
-  //   return total + completed;
-  // }, 0);
-  
-  // const totalTasks = goals.reduce((total, goal) => {
-  //   return total + (goal.tasks?.length || 0);
-  // }, 0);
-  
-  // // Calculate average progress
-  // const averageProgress = activeGoals 
-  //   ? Math.round(goals.reduce((sum, goal) => sum + (goal.progress || 0), 0) / activeGoals) 
-  //   : 0;
-  
-  // Get user name from profile if available
+
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "there";
 
   return (
@@ -170,8 +155,8 @@ const Dashboard = () => {
                 </div>
               ) : goals.length > 0 ? (
                 <StaggerContainer className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {goals.map((goal) => (
-                    <StaggerItem key={Math.random()}>
+                  {goals.map((goal: Goal) => (
+                    <StaggerItem key={goal.id.toString()}>
                       <GoalCard 
                         goal={goal} 
                         onSelect={handleSelectGoal}

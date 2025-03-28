@@ -12,7 +12,7 @@ export const CreateTodo = async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: "Please fill in all fields." });
     }
 
-    const todo = await prisma.task.create({
+    const todo = await prisma.todo.create({
       data: {
         description,
         goalId,
