@@ -51,7 +51,7 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
 
       // Generate roadmap using AI
       const roadmap: [] = await axios.post(
-        `${process.env.BACKEND_URL}/api/roadmap/generate`,
+        `${import.meta.env.BACKEND_URL}/api/roadmap/generate`,
         {
           title,
           description,
@@ -71,16 +71,6 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         setLoading(false);
         return;
       }
-
-      // Create the new goal object
-      const newGoal: Goal = {
-        userId: user.id,
-        title,
-        description,
-        timeframe: parseInt(timeframe),
-      };
-
-      console.log("Saving goal:", newGoal);
 
       // save goal to database
       const goalResponse = await axios.post(

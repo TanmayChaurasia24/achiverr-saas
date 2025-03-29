@@ -18,8 +18,8 @@ export const createGoal = async (req: Request, res: Response): Promise<any> => {
         userId: userId,
       },
     });
-
-    if (isthere) {
+    console.log("isthere: ", isthere);
+    if (isthere && isthere !== null) {
       return res.status(500).json({
         message: `goal with the title ${title} is already there for the user with id ${userId}`,
       });

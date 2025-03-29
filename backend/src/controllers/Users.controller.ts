@@ -4,7 +4,10 @@ import { Request, Response } from "express";
 
 const prisma = new PrismaClient();
 
-export const saveProfile = async (req: Request, res: Response): Promise<any> => {
+export const saveProfile = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   const { id, email, phone, user_metadata } = req.body.user;
 
   try {
@@ -18,21 +21,35 @@ export const saveProfile = async (req: Request, res: Response): Promise<any> => 
       });
     }
 
-    const user = await prisma.user.upsert({
-      where: { id },
-      update: { updatedAt: new Date() },
-      create: {
+    const existingUser = await prisma.user.findFirst({
+      where: { id, email },
+    });
+
+    if (existingUser) {
+      const user = await prisma.user.update({
+        where: { id },
+        data: { updatedAt: new Date() },
+      });
+      return res.status(200).json({
+        message: "User already exists",
+        user: existingUser,
+        userUpdated: user,
+      });
+    }
+
+    const newUser = await prisma.user.create({
+      data: {
         id,
         fullName,
         email,
         avatarUrl,
-        phone
+        phone,
       },
     });
 
     return res.status(201).json({
       message: "Profile saved successfully",
-      user,
+      user: newUser,
     });
   } catch (error) {
     return res.status(500).json({

@@ -26,7 +26,7 @@ model User {
   Goal Goal[]
 }
 
-model Goal {
+model Goal {  
   id          String   @id @default(uuid())
   userId      String
   title       String

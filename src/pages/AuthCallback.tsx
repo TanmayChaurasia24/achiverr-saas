@@ -1,11 +1,11 @@
-
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Layout } from '@/components/Layout';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Layout } from "@/components/Layout";
+import { Loader2, Phone } from "lucide-react";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
+import axios from "axios";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -14,24 +14,36 @@ const AuthCallback = () => {
     const handleAuthCallback = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
-          console.error('Error during auth callback:', error);
-          toast.error('Authentication failed. Please try again.');
-          navigate('/login?error=auth-failed');
+          console.error("Error during auth callback:", error);
+          toast.error("Authentication failed. Please try again.");
+          navigate("/login?error=auth-failed");
         } else if (data?.session) {
-          // Successful authentication - redirect to dashboard
-          toast.success('Successfully signed in!');
-          navigate('/dashboard');
+          const responseProfileSave = await axios.post(
+            `${import.meta.env.BACKEND_URL}/api/user/saveprofile`,
+            {
+              email: data.session.user.email,
+              id: data.session.user.id,
+              Phone: data.session.user.phone,
+              user_metadata: data.session.user.user_metadata,
+            }
+          );
+          if (responseProfileSave.status === 201) {
+            toast.success("Successfully signed in!");
+            navigate("/dashboard");
+          } else {
+            toast.error("Failed to save profile. Please try again.");
+            navigate("/login?error=auth-failed");
+          }
         } else {
-          // No session found - still redirect to dashboard since we want pages to be accessible without login
-          navigate('/dashboard');
+          navigate("/login");
         }
       } catch (error) {
-        console.error('Unexpected error during auth:', error);
-        toast.error('An unexpected error occurred during authentication.');
+        console.error("Unexpected error during auth:", error);
+        toast.error("An unexpected error occurred during authentication.");
         // Even in case of error, still redirect to dashboard
-        navigate('/dashboard');
+        navigate("/dashboard");
       }
     };
 
@@ -40,20 +52,20 @@ const AuthCallback = () => {
 
   return (
     <Layout>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="flex flex-col items-center justify-center h-[60vh]"
       >
         <motion.div
-          animate={{ 
+          animate={{
             rotate: 360,
           }}
-          transition={{ 
-            repeat: Infinity, 
+          transition={{
+            repeat: Infinity,
             duration: 1.5,
-            ease: "linear"
+            ease: "linear",
           }}
         >
           <Loader2 className="h-10 w-10 text-accent mb-4" />

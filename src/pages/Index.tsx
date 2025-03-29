@@ -28,20 +28,20 @@ const Dashboard = () => {
   }, []);
   
   const loadGoals = async() => {
-    setLoading(true);
+    // setLoading(true);
     
-    try {
-      console.log("user details: ", user);
+    // try {
+    //   console.log("user details: ", user);
       
-      const fetchAllGoals = await axios.get(`${import.meta.env.BACKEND_URL}/api/goal/bulk/${user?.id}`)
-      console.log("fetched goals from backend: ", fetchAllGoals);
-      setGoals(fetchAllGoals.data.goals);
-    } catch (error) {
-      console.error("Error loading goals:", error);
-      toast.error("Failed to load goals");
-    } finally {
-      setLoading(false);
-    }
+    //   const fetchAllGoals = await axios.get(`${import.meta.env.BACKEND_URL}/api/goal/bulk/${user?.id}`)
+    //   console.log("fetched goals from backend: ", fetchAllGoals);
+    //   setGoals(fetchAllGoals.data.goals);
+    // } catch (error) {
+    //   console.error("Error loading goals:", error);
+    //   toast.error("Failed to load goals");
+    // } finally {
+    //   setLoading(false);
+    // }
   };
   
   const handleSelectGoal = (goalId: string) => {
