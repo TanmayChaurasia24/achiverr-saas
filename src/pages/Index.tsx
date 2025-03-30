@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Goal } from "@/types";
@@ -7,14 +6,33 @@ import { NewGoalForm } from "@/components/NewGoalForm";
 import { getGoals } from "@/utils/storage";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp, ListChecks, Calendar, PlusCircle, Sparkles } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  BarChart3,
+  TrendingUp,
+  ListChecks,
+  Calendar,
+  PlusCircle,
+  Sparkles,
+} from "lucide-react";
 import { AIGoalSuggestions } from "@/components/AIGoalSuggestions";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-import { FadeIn, ScaleIn, StaggerContainer, StaggerItem, HoverCard } from "@/components/ui/animations";
+import {
+  FadeIn,
+  ScaleIn,
+  StaggerContainer,
+  StaggerItem,
+  HoverCard,
+} from "@/components/ui/animations";
 import axios from "axios";
 
 const Dashboard = () => {
@@ -22,33 +40,44 @@ const Dashboard = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  
+
   useEffect(() => {
     loadGoals();
   }, []);
-  
-  const loadGoals = async() => {
-    // setLoading(true);
-    
-    // try {
-    //   console.log("user details: ", user);
-      
-    //   const fetchAllGoals = await axios.get(`${import.meta.env.BACKEND_URL}/api/goal/bulk/${user?.id}`)
-    //   console.log("fetched goals from backend: ", fetchAllGoals);
-    //   setGoals(fetchAllGoals.data.goals);
-    // } catch (error) {
-    //   console.error("Error loading goals:", error);
-    //   toast.error("Failed to load goals");
-    // } finally {
-    //   setLoading(false);
-    // }
+
+  const loadGoals = async () => {
+    setLoading(true);
+
+    try {
+      console.log("user details: ", user);
+
+      const fetchAllGoals = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/goal/bulk`,
+        {
+          userId: user.id,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("fetched goals from backend: ", fetchAllGoals);
+      setGoals(fetchAllGoals.data.goals);
+    } catch (error) {
+      console.error("Error loading goals:", error);
+      toast.error("Failed to load goals");
+    } finally {
+      setLoading(false);
+    }
   };
-  
+
   const handleSelectGoal = (goalId: string) => {
     navigate(`/goals/${goalId}`);
   };
 
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "there";
+  const userName =
+    user?.user_metadata?.full_name || user?.email?.split("@")[0] || "there";
 
   return (
     <Layout>
@@ -64,7 +93,7 @@ const Dashboard = () => {
           </div>
           <NewGoalForm onGoalCreated={loadGoals} />
         </div>
-        
+
         <div className="grid gap-6 md:grid-cols-3">
           <HoverCard>
             <Card className="enhanced-card overflow-hidden">
@@ -86,7 +115,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </HoverCard>
-          
+
           <HoverCard>
             <Card className="enhanced-card overflow-hidden">
               <CardHeader className="pb-2">
@@ -109,7 +138,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </HoverCard>
-          
+
           <HoverCard>
             <Card className="enhanced-card overflow-hidden">
               <CardHeader className="pb-2">
@@ -121,9 +150,7 @@ const Dashboard = () => {
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold">
-                      {50}%
-                    </div>
+                    <div className="text-2xl font-bold">{50}%</div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Overall goal completion
                     </p>
@@ -133,12 +160,12 @@ const Dashboard = () => {
             </Card>
           </HoverCard>
         </div>
-        
+
         {/* AI Goal Suggestions */}
         <ScaleIn>
           <AIGoalSuggestions onGoalAdded={loadGoals} />
         </ScaleIn>
-        
+
         <div>
           <Tabs defaultValue="current" className="w-full">
             <div className="flex justify-between items-center mb-4">
@@ -147,20 +174,19 @@ const Dashboard = () => {
                 <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
             </div>
-            
+
             <TabsContent value="current" className="mt-0">
               {loading ? (
                 <div className="flex justify-center py-12">
-                  <div className="animate-pulse text-muted-foreground">Loading goals...</div>
+                  <div className="animate-pulse text-muted-foreground">
+                    Loading goals...
+                  </div>
                 </div>
               ) : goals.length > 0 ? (
                 <StaggerContainer className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {goals.map((goal: Goal) => (
                     <StaggerItem key={goal.id.toString()}>
-                      <GoalCard 
-                        goal={goal} 
-                        onSelect={handleSelectGoal}
-                      />
+                      <GoalCard goal={goal} onSelect={handleSelectGoal} />
                     </StaggerItem>
                   ))}
                 </StaggerContainer>
@@ -172,15 +198,16 @@ const Dashboard = () => {
                     </div>
                     <h3 className="text-xl font-semibold mb-2">No goals yet</h3>
                     <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                      Create your first goal to get started. Set a clear objective with a timeframe,
-                      and we'll help you create a roadmap to achieve it.
+                      Create your first goal to get started. Set a clear
+                      objective with a timeframe, and we'll help you create a
+                      roadmap to achieve it.
                     </p>
                     <NewGoalForm onGoalCreated={loadGoals} />
                   </Card>
                 </FadeIn>
               )}
             </TabsContent>
-            
+
             <TabsContent value="completed">
               <Card className="enhanced-card">
                 <CardHeader>

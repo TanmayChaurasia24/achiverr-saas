@@ -20,30 +20,42 @@ const AuthCallback = () => {
           toast.error("Authentication failed. Please try again.");
           navigate("/login?error=auth-failed");
         } else if (data?.session) {
+          console.log("data.session going to save the user to database: ", data.session);
+          
           const responseProfileSave = await axios.post(
-            `${import.meta.env.BACKEND_URL}/api/user/saveprofile`,
+            `${import.meta.env.VITE_BACKEND_URL}/api/user/saveprofile`,
             {
-              email: data.session.user.email,
-              id: data.session.user.id,
-              Phone: data.session.user.phone,
-              user_metadata: data.session.user.user_metadata,
+              user: {
+                email: data.session.user.email,
+                id: data.session.user.id,
+                phone: data.session.user.phone,
+                user_metadata: data.session.user.user_metadata,
+              }
             }
           );
+          console.log("responseProfileSave: ", responseProfileSave);
+          
+          if(!responseProfileSave){
+            console.log("responseProfileSave is false");
+            toast.error("Failed to save profile. Please try again.");
+            navigate("/login?error=auth-failed");
+          }
           if (responseProfileSave.status === 201) {
             toast.success("Successfully signed in!");
+            console.log("responseProfileSave.status is 201");
             navigate("/dashboard");
           } else {
+            console.log("responseProfileSave.status is not 201");
             toast.error("Failed to save profile. Please try again.");
             navigate("/login?error=auth-failed");
           }
         } else {
+          console.log("data.session is false");
           navigate("/login");
         }
       } catch (error) {
         console.error("Unexpected error during auth:", error);
-        toast.error("An unexpected error occurred during authentication.");
-        // Even in case of error, still redirect to dashboard
-        navigate("/dashboard");
+        navigate("/login?error=auth-failed");
       }
     };
 

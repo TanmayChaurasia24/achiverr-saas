@@ -14,8 +14,8 @@ export const createGoal = async (req: Request, res: Response): Promise<any> => {
 
     const isthere = await prisma.goal.findFirst({
       where: {
-        title: title,
         userId: userId,
+        title: title,
       },
     });
     console.log("isthere: ", isthere);
