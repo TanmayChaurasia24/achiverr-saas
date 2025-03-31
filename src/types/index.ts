@@ -1,23 +1,21 @@
-
 export interface Goal {
-  id: String;
+  id: string;
   userId: String;
   title: String;
   description: String;
   timeframe: String;
   createdAt: Date;
   updatedAt: Date;
-  roadmapItems: RoadmapItem[]
+  roadmapItems?: RoadmapItem[];
   tasks:Todo[]
 }
 
 export interface RoadmapItem {
   id: string;
-  timePeriod: string;
-  tasks: string[];
+  day: string;
+  description: string;
   completed: boolean;
-  day?: number; // Added day property that's used in supabaseHelpers.ts
-  description?: string; // Added description property that's used in supabaseHelpers.ts
+  goalId: string;
 }
 
 export interface Todo {
@@ -27,4 +25,9 @@ export interface Todo {
   day: number;
   completed: boolean;
   createdAt: string;
+}
+
+export interface GoalResponse {
+  message: string;
+  goal: Goal;
 }
