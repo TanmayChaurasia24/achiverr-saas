@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,11 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, ListChecks, Map, Trash2, Calendar, ClipboardList } from "lucide-react";
 import { RoadmapView } from "@/components/RoadmapView";
 import { TaskList } from "@/components/TaskList";
-import { Goal, Task } from "@/types";
+import { Goal } from "@/types";
 import { 
   calculateGoalProgress, 
   deleteGoal, 
-  getGoalById, 
+  getGoalById,
   getTasksByGoalId, 
   saveGoal 
 } from "@/utils/storage";
@@ -30,47 +29,60 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { FadeIn, ScaleIn, StaggerContainer, StaggerItem } from "@/components/ui/animations";
+import axios from "axios";
 
 const GoalDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [goal, setGoal] = useState<Goal | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Array<{
+    id: string;
+    goalId: string;
+    title: string;
+    completed: boolean;
+    createdAt: string;
+  }>>([]); 
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   
   useEffect(() => {
     if (!id) {
+      console.log("no id found");
       navigate("/");
       return;
     }
-    
-    const loadGoal = async () => {
-      setLoading(true);
-      console.log("Loading goal with ID:", id);
-      
-      try {
-        // Load goal from local storage
-        const localGoal = getGoalById(id);
-        if (!localGoal) {
-          toast.error("Goal not found");
-          navigate("/");
-          return;
-        }
-        
-        setGoal(localGoal);
-        setTasks(getTasksByGoalId(id));
-      } catch (error) {
-        console.error("Error loading goal:", error);
-        toast.error("Failed to load goal");
-        navigate("/");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     loadGoal();
   }, [id, navigate]);
+
+     
+  const loadGoal = async () => {
+    setLoading(true);
+    console.log("Loading goal with ID:", id);
+    
+    try {
+      // Load goal data from backend
+      const localGoal: {
+        data:{
+          message: string;
+          goal: Goal;
+        }
+      } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/goal/get/${id}`)
+      if (!localGoal) {
+        toast.error("Goal not found");
+        navigate("/");
+        return;
+      }
+      console.log("localGoal from backend: ", localGoal.data.goal);
+      setGoal(localGoal.data.goal);
+      setTasks(getTasksByGoalId(id));
+    } catch (error) {
+      console.error("Error loading goal:", error);
+      toast.error("Failed to load goal");
+      navigate("/");
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handleTasksUpdated = () => {
     if (!goal) return;
@@ -112,9 +124,9 @@ const GoalDetail = () => {
   }
 
   // Calculate days remaining
-  const deadline = new Date(goal.deadline);
-  const today = new Date();
-  const daysRemaining = Math.max(0, Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+  // const deadline = new Date(goal.deadline);
+  // const today = new Date();
+  // const daysRemaining = Math.max(0, Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
   
   // Calculate completed tasks
   const completedTasks = tasks.filter(task => task.completed).length;
@@ -169,12 +181,6 @@ const GoalDetail = () => {
                       <div className="text-sm text-muted-foreground mb-1 flex items-center">
                         <Calendar className="h-3 w-3 mr-1" /> Deadline
                       </div>
-                      <div className="font-medium">
-                        {new Date(goal.deadline).toLocaleDateString()} 
-                        <span className="text-muted-foreground ml-2 text-sm">
-                          ({daysRemaining} days left)
-                        </span>
-                      </div>
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground mb-1 flex items-center">
@@ -185,40 +191,19 @@ const GoalDetail = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="mt-6">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Progress</span>
-                      <span className="font-medium">{goal.progress || 0}%</span>
-                    </div>
-                    <Progress value={goal.progress || 0} className="h-2" 
-                      indicatorClassName={goal.progress && goal.progress > 75 
-                        ? "bg-gradient-to-r from-accent to-accent-foreground" 
-                        : undefined
-                      } 
-                    />
-                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </ScaleIn>
         
-        <FadeIn delay={0.2}>
-          <Card className="enhanced-card h-full">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-medium mb-4">Roadmap Overview</h3>              
-              <div className="mt-2">
-                <p className="text-sm text-muted-foreground">
-                  Your journey is divided into {goal.roadmap.length} steps.
-                  {goal.progress && goal.progress > 0 
-                    ? ` You've completed ${Math.floor(goal.progress / 100 * goal.roadmap.length)} steps so far.` 
-                    : " Let's get started!"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </FadeIn>
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Roadmap</h2>
+          <RoadmapView 
+            roadmapItems={goal?.roadmapItems} 
+            loading={loading}
+          />
+        </div>
       </div>
       
       <StaggerContainer>
@@ -237,7 +222,10 @@ const GoalDetail = () => {
             <StaggerItem>
               <Card className="enhanced-card">
                 <CardContent className="p-6">
-                  <RoadmapView goal={goal} />
+                  <RoadmapView 
+                    roadmapItems={goal?.roadmapItems}
+                    loading={loading}
+                  />
                 </CardContent>
               </Card>
             </StaggerItem>
