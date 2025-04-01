@@ -1,16 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Goal } from "@/types";
 import { GoalCard } from "@/components/GoalCard";
 import { NewGoalForm } from "@/components/NewGoalForm";
-import { getGoals } from "@/utils/storage";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp, ListChecks, Calendar, PlusCircle, Sparkles } from "lucide-react";
+import { TrendingUp, ListChecks, Calendar, Sparkles } from "lucide-react";
 import { AIGoalSuggestions } from "@/components/AIGoalSuggestions";
-import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 

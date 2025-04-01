@@ -36,3 +36,45 @@ export const CreateTodo = async (req: Request, res: Response): Promise<any> => {
     });
   }
 };
+
+export const fetchTodoGoal = async(req: Request, res: Response): Promise<any> => {
+  try {
+    const {goalId} = req.params;
+
+    if(!goalId) {
+      return res.status(500).json({
+        message: "error while fetching the todos of the goal",
+      })
+    }
+
+    const GoalTodos: {
+      id: string;
+      goalId: string;
+      description: string;
+      day: string;
+      completed: boolean;
+      createdAt: Date;
+      updatedAt: Date
+    }[] = await prisma.todo.findMany({
+      where: {
+        goalId
+      }
+    }) 
+
+    if(!GoalTodos) {
+      return res.status(500).json({
+        message: "error while fetching the todos of the goal"
+      })
+    }
+
+    return res.status(201).json({
+      message: "todos for the goals fetched successfully",
+      GoalTodos
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: "error while fetching the todo of the goal",
+      error: error
+    })
+  }
+}

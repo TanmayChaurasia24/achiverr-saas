@@ -3,6 +3,7 @@ import "dotenv/config";
 import userroutes from "./routes/user.route"
 import roadmaproutes from "./routes/roadmap.route"
 import goalroutes from "./routes/goals.route"
+import todoroutes from "./routes/todo.route"
 import cors from "cors"
 
 const PORT = process.env.PORT || 5050
@@ -16,8 +17,8 @@ app.use(cors({
 app.use('/api/user', userroutes)
 app.use('/api/roadmap', roadmaproutes)
 app.use('/api/goal', goalroutes)
+app.use('/api/todo', todoroutes)
 
 app.listen(PORT, () => {
     console.log(`server is running on http://localhost:${PORT}`);
-    
 })

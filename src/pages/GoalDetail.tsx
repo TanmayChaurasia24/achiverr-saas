@@ -84,11 +84,20 @@ const GoalDetail = () => {
     }
   };
   
-  const handleTasksUpdated = () => {
+  const handleTasksUpdated = async() => {
     if (!goal) return;
     
-    // Update tasks
-    setTasks(getTasksByGoalId(goal.id));
+    // get todos from backend
+    const todoResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/todo/fetch/${goal.id}`)
+
+    if(!todoResponse.data) {
+      toast.error("Failed loading todos! please try again later")
+      navigate('/dashboard')
+    }
+    console.log("todo response from backend is: ", todoResponse);
+    setTasks(todoResponse.data.GoalTodos);
+
+    toast.success("Todos fetched successfully!")
     
     // Update goal progress
     const progress = calculateGoalProgress(goal.id);

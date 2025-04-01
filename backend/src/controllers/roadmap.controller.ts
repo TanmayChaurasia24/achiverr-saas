@@ -10,31 +10,35 @@ export const createRoadmapDatabase = async (
 ): Promise<any> => {
   try {
     const { goalId } = req.params;
-    const roadmapitems = req.body;
-    
-    if (!Array.isArray(roadmapitems)|| !goalId || roadmapitems.length === 0) {
+    const { roadmapitems } = req.body;
+
+    if (!Array.isArray(roadmapitems) || !goalId || roadmapitems.length === 0) {
       return res.status(400).json({ message: "Please fill all fields." });
     }
-    
+
     const Currentroadmap = [];
-    
-    for(const item of roadmapitems) {
-      const {timeperiod, tasks} = item;
+
+    for (const item of roadmapitems) {
+      const { timeperiod, tasks } = item;
 
       if (!timeperiod || !Array.isArray(tasks) || tasks.length === 0) {
-        return res.status(400).json({ message: "Each roadmap item must have a time period and tasks." });
+        return res.status(400).json({
+          message: "Each roadmap item must have a time period and tasks.",
+        });
       }
 
       const roadmapitem = await prisma.roadmapItem.create({
         data: {
           goalId,
           day: timeperiod,
-          description: tasks.join(", "),  
+          description: tasks.join(", "),
         },
       });
 
       if (!roadmapitem) {
-        return res.status(400).json({ message: "Failed to create roadmap item." });
+        return res
+          .status(400)
+          .json({ message: "Failed to create roadmap item." });
       }
 
       Currentroadmap.push(roadmapitem);
@@ -42,7 +46,7 @@ export const createRoadmapDatabase = async (
 
     return res.status(201).json({
       message: "roadmap created",
-      Currentroadmap
+      Currentroadmap,
     });
   } catch (error) {
     return res.status(500).json({
@@ -51,7 +55,6 @@ export const createRoadmapDatabase = async (
     });
   }
 };
-
 
 export const generateRoadmapAi = async (
   req: Request,
@@ -64,23 +67,24 @@ export const generateRoadmapAi = async (
       return res.status(400).json({ message: "Please fill all fields." });
     }
     const response = await fetch(
-        "https://api.cloudflare.com/client/v4/accounts/a08822ecd78ffb3acede87da0e234c0e/ai/run/@cf/meta/llama-3-8b-instruct",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            messages: [
-              {
-                role: "system",
-                content: "You are an AI assistant that strictly follows the prompt and returns responses accurately in JSON format only.",
-              },
-              {
-                role: "user",
-                content: `
+      "https://api.cloudflare.com/client/v4/accounts/a08822ecd78ffb3acede87da0e234c0e/ai/run/@cf/meta/llama-3-8b-instruct",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are an AI assistant that strictly follows the prompt and returns responses accurately in JSON format only.",
+            },
+            {
+              role: "user",
+              content: `
                   Generate a structured roadmap in JSON format based on the given details.
       
                   ### Input Details:
@@ -99,24 +103,22 @@ export const generateRoadmapAi = async (
                       { "timePeriod": "Day 4-6", "tasks": ["Task 3", "Task 4"] }
                   ]
                 `.trim(),
-              },
-            ],
-            max_tokens: 500,
-            stream: false,
-          }),
-        }
-      );
-      
-    
+            },
+          ],
+          max_tokens: 500,
+          stream: false,
+        }),
+      }
+    );
+
     if (!response.ok) {
-        return res.status(response.status).json({ message: response.statusText });
+      return res.status(response.status).json({ message: response.statusText });
     }
     console.log("response is: ", response);
-    
+
     const data = await response.json();
 
     console.log("data is: ", data);
-    
 
     return res.status(200).json({ success: true, data });
   } catch (error: any) {
@@ -124,6 +126,52 @@ export const generateRoadmapAi = async (
     return res.status(500).json({
       message: "Error while generating roadmap",
       error: error.message || error,
+    });
+  }
+};
+
+export const fetchParticularRoadmap = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { goalId } = req.params;
+
+    if (!goalId) {
+      return res.status(500).json({
+        message: "goal id is not present in fetch particular roadmap",
+        goalId,
+      });
+    }
+
+    const GoalRoadmap: {
+      id: string;
+      goalId: string;
+      day: string;
+      description: string;
+      completed: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+    }[] = await prisma.roadmapItem.findMany({
+      where: {
+        goalId,
+      },
+    });
+
+    if (!GoalRoadmap) {
+      return res.status(500).json({
+        message: "error while fetching the roadmap"
+      })
+    }
+
+    return res.status(201).json({
+      message: "roadmap for the goal fetched successfully",
+      GoalRoadmap
+    })
+  } catch (error: any) {
+    return res.status(500).json({
+      message: "error while fetching the roadmap for a goal",
+      error: error.message,
     });
   }
 };
