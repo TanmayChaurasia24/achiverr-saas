@@ -1,9 +1,9 @@
 export interface Goal {
   id: string;
-  userId: String;
-  title: String;
-  description: String;
-  timeframe: String;
+  userId: string;
+  title: string;
+  description: string;
+  timeframe: string;
   createdAt: Date;
   updatedAt: Date;
   roadmapItems?: RoadmapItem[];
@@ -11,6 +11,8 @@ export interface Goal {
 }
 
 export interface RoadmapItem {
+  timePeriod: any;
+  tasks: any[];
   id: string;
   day: string;
   description: string;
@@ -22,7 +24,7 @@ export interface Todo {
   id: string;
   goalId: string;
   description: string;
-  day: number;
+  day: string;
   completed: boolean;
   createdAt: string;
 }

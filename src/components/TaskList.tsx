@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Task, Goal } from "@/types";
+import { Todo, Goal } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { markTaskComplete, saveTask } from "@/utils/storage";
 
@@ -15,7 +15,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 interface TaskListProps {
   goal: Goal;
-  tasks: Task[];
+  tasks: Todo[];
   onTasksUpdated: () => void;
 }
 
@@ -29,7 +29,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   
   const currentDay = 10
   // Group tasks by day
-  const tasksByDay = tasks.reduce<Record<number, Task[]>>((acc, task) => {
+  const tasksByDay = tasks.reduce<Record<number, Todo[]>>((acc, task) => {
     if (!acc[task.day]) {
       acc[task.day] = [];
     }
@@ -56,7 +56,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     
     // If all current day tasks are completed and we don't have next day tasks yet,
     // automatically generate tasks for the next day
-    if (allCurrentTasksCompleted && !nextDayExists && currentDay < goal.timeframe) {
+    if (allCurrentTasksCompleted && !nextDayExists && currentDay < parseInt(goal.timeframe)) {
       generateTasksForDay(currentDay + 1);
       toast.success(`All tasks for day ${currentDay} completed! Generated tasks for day ${currentDay + 1}.`);
     }
@@ -93,7 +93,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
       console.log("Generating tasks for day:", day);
       
       // Get relevant roadmap items to inform task generation
-      const relevantRoadmapItems = goal.roadmap.filter(item => {
+      const relevantRoadmapItems = goal.roadmapItems.filter(item => {
         // Extract day range from timePeriod
         const dayMatch = item.timePeriod.match(/Day\s+(\d+)(?:-(\d+))?/i);
         if (!dayMatch) return false;
@@ -162,7 +162,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleGenerateTasksForToday}
+            // onClick={handleGenerateTasksForToday}
             disabled={loading}
             className="group"
           >
@@ -220,7 +220,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
             </div>
             
             <Button 
-              onClick={handleStartJourney} 
+              // onClick={handleStartJourney} 
               disabled={loading || !startDate}
               className="w-full"
             >
@@ -266,9 +266,9 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
                         <Checkbox
                           id={task.id}
                           checked={task.completed}
-                          onCheckedChange={(checked) => 
-                            handleTaskCheck(task.id, checked as boolean)
-                          }
+                          // onCheckedChange={(checked) => 
+                          //   // handleTaskCheck(task.id, checked as boolean)
+                          // }
                           className="mt-0.5"
                         />
                         <label
@@ -305,7 +305,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
             <AlertDialogCancel>Go back</AlertDialogCancel>
             <AlertDialogAction onClick={() => {
               setShowAlert(false);
-              if (nextDay) generateTasksForDay(nextDay);
+              // if (nextDay) generateTasksForDay(nextDay);
             }}>
               Generate anyway
             </AlertDialogAction>

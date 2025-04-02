@@ -40,6 +40,8 @@ const GoalDetail = () => {
     goalId: string;
     title: string;
     completed: boolean;
+    day: string;
+    description: string;
     createdAt: string;
   }>>([]); 
   const [loading, setLoading] = useState(true);
@@ -85,20 +87,7 @@ const GoalDetail = () => {
   };
   
   const handleTasksUpdated = async() => {
-    if (!goal) return;
-    
-    // get todos from backend
-    const todoResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/todo/fetch/${goal.id}`)
-
-    if(!todoResponse.data) {
-      toast.error("Failed loading todos! please try again later")
-      navigate('/dashboard')
-    }
-    console.log("todo response from backend is: ", todoResponse);
-    setTasks(todoResponse.data.GoalTodos);
-
-    toast.success("Todos fetched successfully!")
-    
+       
     // Update goal progress
     const progress = calculateGoalProgress(goal.id);
     const updatedGoal = { ...goal, progress };
@@ -205,17 +194,8 @@ const GoalDetail = () => {
             </CardContent>
           </Card>
         </ScaleIn>
-        
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Roadmap</h2>
-          <RoadmapView 
-            roadmapItems={goal?.roadmapItems} 
-            loading={loading}
-          />
-        </div>
       </div>
       
-      <StaggerContainer>
         <Tabs defaultValue="roadmap" className="w-full">
           <TabsList className="mb-6 enhanced-card">
             <TabsTrigger value="roadmap" className="flex items-center">
@@ -227,7 +207,7 @@ const GoalDetail = () => {
               Tasks
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="roadmap">
+          <TabsContent value="roadmap" key={Math.random()}>
             <StaggerItem>
               <Card className="enhanced-card">
                 <CardContent className="p-6">
@@ -239,13 +219,13 @@ const GoalDetail = () => {
               </Card>
             </StaggerItem>
           </TabsContent>
-          <TabsContent value="tasks">
+          <TabsContent value="tasks" key={Math.random()}>
             <StaggerItem>
               <Card className="enhanced-card">
                 <CardContent className="p-6">
                   <TaskList 
                     goal={goal} 
-                    tasks={tasks} 
+                    tasks={goal?.tasks} 
                     onTasksUpdated={handleTasksUpdated} 
                   />
                 </CardContent>
@@ -253,7 +233,6 @@ const GoalDetail = () => {
             </StaggerItem>
           </TabsContent>
         </Tabs>
-      </StaggerContainer>
     </FadeIn>
   );
 };
