@@ -58,6 +58,7 @@ const Landing = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
             className="gradient-text"
+            onClick={() => navigate('/')}
           >
             Achiverr
           </motion.span>

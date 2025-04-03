@@ -17,6 +17,8 @@ import axios from "axios";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [activeGoals,setactivegoals] = useState(0)
+  const [completedgoals, setcompletedgoals] = useState(0);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   
@@ -38,7 +40,16 @@ const Dashboard = () => {
         }
       })
       console.log("fetched goals from backend: ", fetchAllGoals.data);
+
       setGoals(fetchAllGoals.data.goals);
+      let count = 0;
+      for (const element of goals) {
+        if(element.completed == true) {
+          count++;
+        }
+      }
+      setcompletedgoals(count);
+      setactivegoals(goals.length)
     } catch (error) {
       console.error("Error loading goals:", error);
       toast.error("Failed to load goals");
@@ -80,10 +91,10 @@ const Dashboard = () => {
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold">{10}</div>
-                    {/* <p className="text-xs text-muted-foreground mt-1">
+                    <div className="text-2xl font-bold">{activeGoals}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
                       {activeGoals === 0 ? "No goals yet" : `${activeGoals} goal${activeGoals !== 1 ? 's' : ''} in progress`}
-                    </p> */}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -101,12 +112,12 @@ const Dashboard = () => {
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold">{10}</div>
-                    {/* <p className="text-xs text-muted-foreground mt-1">
-                      {totalTasks > 0 
-                        ? `${completedTasks}/${totalTasks} tasks completed` 
+                    <div className="text-2xl font-bold">{completedgoals}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {goals.length > 0 
+                        ? `${completedgoals}/${goals.length} tasks completed` 
                         : "No tasks yet"}
-                    </p> */}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -125,7 +136,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-2xl font-bold">
-                      {50}%
+                      {(completedgoals/goals.length)*100}%
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Overall goal completion

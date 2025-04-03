@@ -31,7 +31,7 @@ export const saveProfile = async (
         where: { id },
         data: { updatedAt: new Date() },
       });
-      return res.status(200).json({
+      return res.status(201).json({
         message: "User already exists",
         user: existingUser,
         userUpdated: user,

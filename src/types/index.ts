@@ -5,6 +5,7 @@ export interface Goal {
   description: string;
   timeframe: string;
   createdAt: Date;
+  completed: boolean;
   updatedAt: Date;
   roadmapItems?: RoadmapItem[];
   tasks:Todo[]

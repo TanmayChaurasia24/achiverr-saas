@@ -40,7 +40,7 @@ const Login = () => {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="text-center mb-8"
         >
-          <h1 className="text-2xl font-bold tracking-tight mb-2">Welcome to DreamPlan</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-2">Welcome to Achiverr</h1>
           <p className="text-muted-foreground">Sign in to track your goals and progress</p>
         </motion.div>
         
