@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import { GoogleGenAI } from "@google/genai";
+import { findPackageJSON } from "module";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -82,8 +83,8 @@ export const generateRoadmapAi = async (req: Request, res: Response): Promise<an
       
       ### Expected Format:
       [
-          { "timePeriod": "Day 1-3", "tasks": ["Task 1", "Task 2"] },
-          { "timePeriod": "Day 4-6", "tasks": ["Task 3", "Task 4"] }
+          { "timeperiod": "Day 1-3", "tasks": ["Task 1", "Task 2"] },
+          { "timeperiod": "Day 4-6", "tasks": ["Task 3", "Task 4"] }
       ]
     `.trim();
 
@@ -92,14 +93,18 @@ export const generateRoadmapAi = async (req: Request, res: Response): Promise<an
       contents: prompt,
     });
 
-    const generatedText = response.text;
+    const generatedText: string | undefined = response?.text
+    if(generatedText == undefined) {
+      return res.status(400).json({ message: "Failed to generate roadmap" });
+    }
+    const finalText = generatedText.trim().replace(/^```json|```$/g, '')
     
-    if (!generatedText) {
+    if (!finalText) {
       return res.status(500).json({ message: "Failed to generate roadmap." });
     }
     console.log(generatedText);
     
-    const roadmap = JSON.parse(generatedText);
+    const roadmap = JSON.parse(finalText);
 
     return res.status(200).json({ success: true, data: roadmap });
   } catch (error: any) {

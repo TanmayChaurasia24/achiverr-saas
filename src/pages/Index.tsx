@@ -43,13 +43,16 @@ const Dashboard = () => {
 
       setGoals(fetchAllGoals.data.goals);
       let count = 0;
+      let count2 = 0;
       for (const element of goals) {
         if(element.completed == true) {
           count++;
+        } else if(element.completed == false) {
+          count2++;
         }
       }
       setcompletedgoals(count);
-      setactivegoals(goals.length)
+      setactivegoals(count2)
     } catch (error) {
       console.error("Error loading goals:", error);
       toast.error("Failed to load goals");

@@ -39,7 +39,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({ roadmapItems = [], loa
           <Card className={`transition-colors ${item.completed ? 'bg-primary/10' : 'bg-muted/50'}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center justify-between">
-                <span>Day {item.day}</span>
+                <span>{item.day}</span>
                 {item.completed ? (
                   <CheckCircle2 className="h-5 w-5 text-primary" />
                 ) : (

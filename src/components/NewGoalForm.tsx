@@ -30,6 +30,7 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [timeframe, setTimeframe] = useState("30");
+  const [Finalroadmap, setfinalroadmap] = useState([])
   const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,11 +51,11 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
       });
 
       // Generate roadmap using AI
-      const roadmap: [] = await axios.post(
-        `${import.meta.env.BACKEND_URL}/api/roadmap/generate`,
+      const roadmap: any = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/roadmap/generate`,
         {
-          title,
-          description,
+          goalTitle: title,
+          goalDescription: description,
           timeframe,
         },
         {
@@ -64,17 +65,18 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         }
       );
 
-      console.log("Generated roadmap:", roadmap);
-
+      console.log("Generated roadmap:", roadmap.data.data);
+      
       if (!roadmap || roadmap.length === 0) {
         toast.error("Failed to generate roadmap. Please try again.");
         setLoading(false);
         return;
       }
-
+      
+      setfinalroadmap(roadmap.data.data)
       // save goal to database
       const goalResponse = await axios.post(
-        `${process.env.BACKEND_URL}/api/goal/create/${user.id}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/goal/create/${user.id}`,
         {
           title,
           description,
@@ -93,21 +95,20 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         return;
       }
 
+      console.log("final roadmap is: ", Finalroadmap);
+      console.log("type of final roadmap is: ", typeof(Finalroadmap));
+      
+      
       // save the ai generated roadmap to the database
       const roadmapReponse = await axios.post(
-        `${process.env.BACKEND_URL}/api/roadmap/create/${goalResponse.data.goalId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/roadmap/create/${goalResponse.data.goalId}`,
         {
-          roadmapitems: roadmap,
+          roadmapitems: Finalroadmap,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
       );
 
-      if(!roadmapReponse.data) {
-        toast.error("failed to create roadmap!")
+      if (!roadmapReponse.data) {
+        toast.error("failed to create roadmap!");
         setLoading(false);
         return;
       }
