@@ -49,7 +49,7 @@ const GoalDetail = () => {
   
   useEffect(() => {
     if (!id) {
-      console.log("no id found");
+      // console.log("no id found");
       navigate("/");
       return;
     }
@@ -59,7 +59,7 @@ const GoalDetail = () => {
      
   const loadGoal = async () => {
     setLoading(true);
-    console.log("Loading goal with ID:", id);
+    // console.log("Loading goal with ID:", id);
     
     try {
       // Load goal data from backend
@@ -74,7 +74,7 @@ const GoalDetail = () => {
         navigate("/");
         return;
       }
-      console.log("localGoal from backend: ", localGoal.data.goal);
+      // console.log("localGoal from backend: ", localGoal.data.goal);
       setGoal(localGoal.data.goal);
       setTasks(getTasksByGoalId(id));
     } catch (error) {

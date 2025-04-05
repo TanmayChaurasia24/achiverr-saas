@@ -30,7 +30,7 @@ const Dashboard = () => {
     setLoading(true);
     
     try {
-      console.log("user details: ", user);
+      // console.log("user details: ", user);
       
       const fetchAllGoals: any = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/goal/bulk`, {
           userId: user?.id
@@ -39,7 +39,7 @@ const Dashboard = () => {
           'Content-Type': 'application/json'
         }
       })
-      console.log("fetched goals from backend: ", fetchAllGoals.data);
+      // console.log("fetched goals from backend: ", fetchAllGoals.data);
 
       setGoals(fetchAllGoals.data.goals);
       let count = 0;

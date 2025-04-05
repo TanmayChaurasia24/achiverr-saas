@@ -8,7 +8,7 @@ export const saveProfile = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  console.log("req.body: ", req.body);
+  // console.log("req.body: ", req.body);
   const { id, email, phone, user_metadata } = req.body.user;
 
   try {

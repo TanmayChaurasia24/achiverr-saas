@@ -44,11 +44,11 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
     setLoading(true);
 
     try {
-      console.log("Generating roadmap for:", {
-        title,
-        description,
-        timeframe: parseInt(timeframe),
-      });
+      // console.log("Generating roadmap for:", {
+      //   title,
+      //   description,
+      //   timeframe: parseInt(timeframe),
+      // });
 
       // Generate roadmap using AI
       const roadmap: any = await axios.post(
@@ -65,7 +65,7 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         }
       );
 
-      console.log("Generated roadmap:", roadmap.data.data);
+      // console.log("Generated roadmap:", roadmap.data.data);
       
       if (!roadmap || roadmap.length === 0) {
         toast.error("Failed to generate roadmap. Please try again.");
@@ -95,8 +95,8 @@ export function NewGoalForm({ onGoalCreated }: NewGoalFormProps) {
         return;
       }
 
-      console.log("final roadmap is: ", Finalroadmap);
-      console.log("type of final roadmap is: ", typeof(Finalroadmap));
+      // console.log("final roadmap is: ", Finalroadmap);
+      // console.log("type of final roadmap is: ", typeof(Finalroadmap));
       
       
       // save the ai generated roadmap to the database

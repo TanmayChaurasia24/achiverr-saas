@@ -33,24 +33,24 @@ const AuthCallback = () => {
               }
             }
           );
-          console.log("responseProfileSave: ", responseProfileSave);
+          // console.log("responseProfileSave: ", responseProfileSave);
           
           if(!responseProfileSave){
-            console.log("responseProfileSave is false");
+            // console.log("responseProfileSave is false");
             toast.error("Failed to save profile. Please try again.");
             navigate("/login?error=auth-failed");
           }
           if (responseProfileSave.status === 201) {
             toast.success("Successfully signed in!");
-            console.log("responseProfileSave.status is 201");
+            // console.log("responseProfileSave.status is 201");
             navigate("/dashboard");
           } else {
-            console.log("responseProfileSave.status is not 201");
+            // console.log("responseProfileSave.status is not 201");
             toast.error("Failed to save profile. Please try again.");
             navigate("/login?error=auth-failed");
           }
         } else {
-          console.log("data.session is false");
+          // console.log("data.session is false");
           navigate("/login");
         }
       } catch (error) {

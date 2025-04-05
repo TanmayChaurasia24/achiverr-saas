@@ -102,7 +102,7 @@ export const generateRoadmapAi = async (req: Request, res: Response): Promise<an
     if (!finalText) {
       return res.status(500).json({ message: "Failed to generate roadmap." });
     }
-    console.log(generatedText);
+    // console.log(generatedText);
     
     const roadmap = JSON.parse(finalText);
 
