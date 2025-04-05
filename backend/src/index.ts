@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5050
 const app = express()
 app.use(express.json())
 app.use(cors({
-    origin: ["http://localhost:8081","https://achiverr.vercel.app/"],
+    origin: ["http://localhost:8081","https://achiverr.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT"]
 }))
