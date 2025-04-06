@@ -35,7 +35,7 @@ model Goal {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   completed   Boolean @default(false)
-
+  startDate   DateTime @default(now())
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
   roadmapItems RoadmapItem[]
   tasks        Todo[]

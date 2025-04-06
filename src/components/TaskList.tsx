@@ -63,7 +63,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   }, [tasks]);
   
   const handleTaskCheck = (taskId: string, checked: boolean) => {
-    console.log("Marking task complete:", taskId, checked);
+    // console.log("Marking task complete:", taskId, checked);
     
     // Update in local storage
     markTaskComplete(taskId, checked);
@@ -90,7 +90,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     setLoading(true);
     
     try {
-      console.log("Generating tasks for day:", day);
+      // console.log("Generating tasks for day:", day);
       
       // Get relevant roadmap items to inform task generation
       const relevantRoadmapItems = goal.roadmapItems.filter(item => {
@@ -107,11 +107,11 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
       
       // Extract tasks from the roadmap to guide the API
       const roadmapGuidance = relevantRoadmapItems.flatMap(item => item.tasks || []);
-      console.log("Roadmap guidance for task generation:", roadmapGuidance);
+      // console.log("Roadmap guidance for task generation:", roadmapGuidance);
       
       // Pass additional context to the API
       const newTasks = ["asdas","adsd"]
-      console.log("Generated tasks:", newTasks);
+      // console.log("Generated tasks:", newTasks);
       
       // Save to local storage
       newTasks.forEach(task => {
@@ -142,7 +142,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     // If start date is in the past, we're on a later day, otherwise day 1
     const dayNum = startDate <= today ? diffDays + 1 : 1;
     
-    console.log("Starting journey from day:", dayNum);
+    // console.log("Starting journey from day:", dayNum);
     setShowStartDatePicker(false);
     generateTasksForDay(dayNum);
   };
