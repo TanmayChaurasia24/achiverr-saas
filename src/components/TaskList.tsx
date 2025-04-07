@@ -1,17 +1,44 @@
-
 import { useState, useEffect } from "react";
 import { Todo, Goal } from "@/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { markTaskComplete, saveTask } from "@/utils/storage";
 
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ListChecks, Loader2, PlusCircle, AlertCircle, Calendar } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  CalendarDays,
+  ListChecks,
+  Loader2,
+  PlusCircle,
+  AlertCircle,
+  Calendar,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import axios from "axios";
 
 interface TaskListProps {
   goal: Goal;
@@ -23,11 +50,13 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [nextDay, setNextDay] = useState<number | null>(null);
-  const [showStartDatePicker, setShowStartDatePicker] = useState(tasks.length === 0);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(
+    tasks.length === 0
+  );
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [isDateOpen, setIsDateOpen] = useState(false);
-  
-  const currentDay = 10
+
+  const currentDay = 10;
   // Group tasks by day
   const tasksByDay = tasks.reduce<Record<number, Todo[]>>((acc, task) => {
     if (!acc[task.day]) {
@@ -36,88 +65,99 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     acc[task.day].push(task);
     return acc;
   }, {});
-  
+
   useEffect(() => {
     // Show date picker if no tasks exist
     if (tasks.length === 0) {
       setShowStartDatePicker(true);
     }
   }, [tasks]);
-  
+
   useEffect(() => {
     // Check if all tasks for the current day are completed
     const currentDayTasks = tasksByDay[currentDay] || [];
-    const allCurrentTasksCompleted = 
-      currentDayTasks.length > 0 && 
-      currentDayTasks.every(task => task.completed);
-    
+    const allCurrentTasksCompleted =
+      currentDayTasks.length > 0 &&
+      currentDayTasks.every((task) => task.completed);
+
     // Check if we already have tasks for the next day
-    const nextDayExists = tasksByDay[currentDay + 1] && tasksByDay[currentDay + 1].length > 0;
-    
+    const nextDayExists =
+      tasksByDay[currentDay + 1] && tasksByDay[currentDay + 1].length > 0;
+
     // If all current day tasks are completed and we don't have next day tasks yet,
     // automatically generate tasks for the next day
-    if (allCurrentTasksCompleted && !nextDayExists && currentDay < parseInt(goal.timeframe)) {
+    if (
+      allCurrentTasksCompleted &&
+      !nextDayExists &&
+      currentDay < parseInt(goal.timeframe)
+    ) {
       generateTasksForDay(currentDay + 1);
-      toast.success(`All tasks for day ${currentDay} completed! Generated tasks for day ${currentDay + 1}.`);
+      toast.success(
+        `All tasks for day ${currentDay} completed! Generated tasks for day ${
+          currentDay + 1
+        }.`
+      );
     }
   }, [tasks]);
-  
+
   const handleTaskCheck = (taskId: string, checked: boolean) => {
     // console.log("Marking task complete:", taskId, checked);
-    
+
     // Update in local storage
     markTaskComplete(taskId, checked);
     onTasksUpdated();
   };
-  
+
   const generateTasksForDay = async (day: number) => {
     if (loading) return;
-    
+
     // Check if current day tasks are complete before generating next day tasks
     if (day > currentDay) {
       const currentDayTasks = tasksByDay[currentDay] || [];
-      const allCurrentTasksCompleted = 
-        currentDayTasks.length > 0 && 
-        currentDayTasks.every(task => task.completed);
-      
+      const allCurrentTasksCompleted =
+        currentDayTasks.length > 0 &&
+        currentDayTasks.every((task) => task.completed);
+
       if (!allCurrentTasksCompleted) {
         setNextDay(day);
         setShowAlert(true);
         return;
       }
     }
-    
+
     setLoading(true);
-    
+
     try {
       // console.log("Generating tasks for day:", day);
-      
+
       // Get relevant roadmap items to inform task generation
-      const relevantRoadmapItems = goal.roadmapItems.filter(item => {
+      const relevantRoadmapItems = goal.roadmapItems.filter((item) => {
         // Extract day range from timePeriod
         const dayMatch = item.timePeriod.match(/Day\s+(\d+)(?:-(\d+))?/i);
         if (!dayMatch) return false;
-        
+
         const startDay = parseInt(dayMatch[1]);
         const endDay = dayMatch[2] ? parseInt(dayMatch[2]) : startDay;
-        
+
         // Check if the current day is within this range
         return day >= startDay && day <= endDay;
       });
-      
+
       // Extract tasks from the roadmap to guide the API
-      const roadmapGuidance = relevantRoadmapItems.flatMap(item => item.tasks || []);
+      const roadmapGuidance = relevantRoadmapItems.flatMap(
+        (item) => item.tasks || []
+      );
       // console.log("Roadmap guidance for task generation:", roadmapGuidance);
-      
+
       // Pass additional context to the API
-      const newTasks = ["asdas","adsd"]
+      const newTasks = ["asdas", "adsd"];
       // console.log("Generated tasks:", newTasks);
-      
+
       // Save to local storage
-      newTasks.forEach(task => {
+      newTasks.forEach((task) => {
         // saveTask(task);
       });
-      
+
       toast.success(`Generated ${newTasks.length} tasks for day ${day}`);
       onTasksUpdated();
     } catch (error) {
@@ -128,21 +168,32 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     }
   };
 
-  const handleStartJourney = () => {
+  const handleStartJourney = async () => {
     if (!startDate) {
       toast.error("Please select a start date");
       return;
     }
-    
+
     // Calculate the day number based on the selected start date
     const today = new Date();
     const diffTime = Math.abs(today.getTime() - startDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     // If start date is in the past, we're on a later day, otherwise day 1
     const dayNum = startDate <= today ? diffDays + 1 : 1;
-    
-    // console.log("Starting journey from day:", dayNum);
+
+    // update the start date of the todo in backend
+    console.log(today);
+    const updatedGoalResponse = await axios.put(
+      `${import.meta.env.VITE_BACKEND_URL}/api/goal/update/starttime/${
+        goal.id
+      }`,
+      {
+        startDate: today,
+      }
+    );
+
+    console.log("Updated goal response:", updatedGoalResponse);
     setShowStartDatePicker(false);
     generateTasksForDay(dayNum);
   };
@@ -157,12 +208,12 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
         <h2 className="text-2xl font-semibold tracking-tight flex items-center">
           <ListChecks className="mr-2 h-5 w-5" /> Tasks
         </h2>
-        
+
         {!showStartDatePicker && (
           <Button
             variant="outline"
             size="sm"
-            // onClick={handleGenerateTasksForToday}
+            onClick={handleGenerateTasksForToday}
             disabled={loading}
             className="group"
           >
@@ -175,13 +226,14 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
           </Button>
         )}
       </div>
-      
+
       {showStartDatePicker ? (
         <Card>
           <CardHeader>
             <CardTitle>When would you like to start your journey?</CardTitle>
             <CardDescription>
-              Select a date to begin tracking your progress and generating daily tasks.
+              Select a date to begin tracking your progress and generating daily
+              tasks.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -211,16 +263,22 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
                 </Popover>
               </div>
               <div className="text-sm text-muted-foreground">
-                {startDate && startDate < new Date() 
-                  ? `You are starting ${format(startDate, "PPP")}, which means you're on day ${
-                      Math.ceil(Math.abs(new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+                {startDate && startDate < new Date()
+                  ? `You are starting ${format(
+                      startDate,
+                      "PPP"
+                    )}, which means you're on day ${
+                      Math.ceil(
+                        Math.abs(new Date().getTime() - startDate.getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      ) + 1
                     } of your journey.`
                   : "Starting today will begin with day 1 of your journey."}
               </div>
             </div>
-            
-            <Button 
-              // onClick={handleStartJourney} 
+
+            <Button
+              onClick={handleStartJourney}
               disabled={loading || !startDate}
               className="w-full"
             >
@@ -242,7 +300,12 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
           {Object.entries(tasksByDay)
             .sort(([dayA], [dayB]) => parseInt(dayB) - parseInt(dayA))
             .map(([day, dayTasks]) => (
-              <Card key={day} className={parseInt(day) === currentDay ? "border-primary/50" : ""}>
+              <Card
+                key={day}
+                className={
+                  parseInt(day) === currentDay ? "border-primary/50" : ""
+                }
+              >
                 <CardHeader className="pb-3 bg-muted/30">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center">
@@ -255,7 +318,8 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
                       )}
                     </CardTitle>
                     <CardDescription>
-                      {dayTasks.filter(t => t.completed).length} of {dayTasks.length} completed
+                      {dayTasks.filter((t) => t.completed).length} of{" "}
+                      {dayTasks.length} completed
                     </CardDescription>
                   </div>
                 </CardHeader>
@@ -266,7 +330,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
                         <Checkbox
                           id={task.id}
                           checked={task.completed}
-                          // onCheckedChange={(checked) => 
+                          // onCheckedChange={(checked) =>
                           //   // handleTaskCheck(task.id, checked as boolean)
                           // }
                           className="mt-0.5"
@@ -274,7 +338,9 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
                         <label
                           htmlFor={task.id}
                           className={`text-sm ${
-                            task.completed ? "line-through text-muted-foreground" : ""
+                            task.completed
+                              ? "line-through text-muted-foreground"
+                              : ""
                           }`}
                         >
                           {task.description}
@@ -287,7 +353,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
             ))}
         </div>
       )}
-      
+
       {/* Alert Dialog for incomplete tasks */}
       <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
         <AlertDialogContent>
@@ -297,16 +363,19 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
               Complete current tasks first
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You still have incomplete tasks for day {currentDay}. It's recommended to complete
-              these tasks before moving to day {nextDay}.
+              You still have incomplete tasks for day {currentDay}. It's
+              recommended to complete these tasks before moving to day {nextDay}
+              .
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Go back</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              setShowAlert(false);
-              // if (nextDay) generateTasksForDay(nextDay);
-            }}>
+            <AlertDialogAction
+              onClick={() => {
+                setShowAlert(false);
+                // if (nextDay) generateTasksForDay(nextDay);
+              }}
+            >
               Generate anyway
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -126,3 +126,43 @@ export const goalsBulk = async (req: Request, res: Response): Promise<any> => {
     });
   }
 }
+
+export const updateGoal = async(req: Request, res: Response): Promise<any> => {
+  try {
+    const {goalId} = req.params;
+    const {startDate} = req.body;
+
+    if(!goalId || !startDate) {
+      return res.status(500).json({
+        message: "all feilds are required"
+      })
+    }
+
+    const updatedGoal = await prisma.goal.update({
+      where: {
+        id: goalId
+      },
+      data: {
+        startDate
+      }
+    })
+
+    if(!updateGoal) {
+      return res.status(500).json({
+        message: "error while updating goal"
+      })
+    }
+
+    console.log("goal updated!");
+
+    return res.status(201).json({
+      message: "goal updated successfully",
+      goal: updatedGoal
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: "error while updating the goal",
+      error
+    })
+  }
+}
