@@ -10,8 +10,16 @@ export const CreateTodo = async (req: Request, res: Response): Promise<any> => {
     const { goalId } = req.params;
     const { description, day, completed } = req.body;
 
-    if (!goalId || !day || !description) {
-      return res.status(400).json({ message: "Please fill in all fields." });
+    if (!goalId) {
+      return res.status(400).json({ message: "goal id missing" });
+    }
+
+    if (!description) {
+      return res.status(400).json({ message: "description missing" });
+    }
+
+    if (!day) {
+      return res.status(400).json({ message: "day is missing" });
     }
 
     const todo = await prisma.todo.create({
@@ -39,17 +47,17 @@ export const CreateTodo = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export const createTodoWithAI = async (req: Request, res: Response) => {
+export const createTodoWithAI = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { goalId, userId } = req.body;
+    const { goalId } = req.body;
 
-    if (!goalId || !userId) {
+    if (!goalId) {
       return res
         .status(400)
-        .json({ message: "goalId and userId are required" });
+        .json({ message: "goalId are required" });
     }
 
-    // 1. Fetch roadmap from your backend
+    //  Fetch roadmap from your backend
     const response = await fetch(
       `${process.env.BACKEND_URL}/api/roadmap/fetch/${goalId}`
     );
@@ -103,7 +111,16 @@ export const createTodoWithAI = async (req: Request, res: Response) => {
 
 
     // match current day with roadmap item
-    const todayRoadmap = roadmap.find((r) => r.day === `Day ${dayDiff}`);
+    const todayRoadmap = roadmap.find((r) => {
+      const range = r.day.replace("Day ", "").split("-");
+      const start = parseInt(range[0], 10);
+      const end = parseInt(range[1], 10);
+    
+      return dayDiff >= start && dayDiff <= end;
+    });
+    console.log(todayRoadmap);
+    
+    
     if (!todayRoadmap) {
       return res
         .status(200)
@@ -131,16 +148,16 @@ export const createTodoWithAI = async (req: Request, res: Response) => {
       - Completed todos so far: ${JSON.stringify(completedTaskTitles)}
       - Current day: ${dayDiff}
       - Roadmap duration: ${roadmap.length} days
+      - Objective to be completed according to the roadmap: ${JSON.stringify(remainingTasks)}
 
       ### Instructions:
       - Break each task into 2–3 actionable subtasks if possible.
       - Only include tasks relevant to the current day and not yet completed.
       - Ensure the output is in the following format:
-
       [
-        "Subtask 1",
-        "Subtask 2",
-        ...
+          "Subtask 1",
+          "Subtask 2",
+          ...
       ]
     `.trim();
 
@@ -155,7 +172,7 @@ export const createTodoWithAI = async (req: Request, res: Response) => {
       })
     }
 
-    const finalText = generatedText.trim().replace(/^```json|```$/g, '')
+    const finalText: any = generatedText.trim().replace(/^```json|```$/g, '')
 
     if(!finalText) {
       return res.status(400).json({
@@ -164,11 +181,36 @@ export const createTodoWithAI = async (req: Request, res: Response) => {
     }
 
     const todos = JSON.parse(finalText)
+    console.log(todos);
+    console.log(finalText);
+    
+    
+    const dayToDatabase = new Date(finalText.date).getDate()
+    const descToDatabase = await todos.join("#####")
+    const createTodoDatabaseResponse = await fetch(`${process.env.BACKEND_URL}/api/todo/create/${goalId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        day: dayToDatabase,
+        description: descToDatabase,
+        completed: false
+      }),
+    })
+
+    const databaseTodoData = await createTodoDatabaseResponse.json()
+    console.log("create database todo response is: ", createTodoDatabaseResponse);
+    console.log("database todo data is: ", databaseTodoData);
+    
+
+    console.log("todo created at database is: ", databaseTodoData);
 
     return res.status(200).json({
       message: "Todos generated successfully",
       date: today.toISOString().split("T")[0],
-      todos
+      todos,
+      createTodoDatabaseResponse
     });
   } catch (error) {
     console.error("AI TODO generation error:", error);
