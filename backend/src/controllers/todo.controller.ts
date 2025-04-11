@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { GoogleGenAI } from "@google/genai";
+import { error } from "console";
 
 const prisma = new PrismaClient();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -140,7 +141,6 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
 
     // 5. AI Prompt
     const prompt = `
-      Generate a structured Todos in array format containing json objects based on the given details.
       You are a productivity assistant. Given a high-level task from a roadmap and a user’s progress, generate a daily TODO list by breaking down remaining tasks into smaller actionable subtasks.
 
       ### Input:
@@ -154,11 +154,15 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
       - Break each task into 2–3 actionable subtasks if possible.
       - Only include tasks relevant to the current day and not yet completed.
       - Ensure the output is in the following format:
-      [
+      {
+        date: date for which you are making the todo,
+        day: day for which you are making the todo,
+        todos: [
           "Subtask 1",
           "Subtask 2",
           ...
-      ]
+        ] 
+    	}
     `.trim();
 
     const AiTodoResponse = await ai.models.generateContent({
@@ -181,12 +185,14 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
     }
 
     const todos = JSON.parse(finalText)
-    console.log(todos);
-    console.log(finalText);
+    console.log("todos are: ", todos);
+    console.log("final text is: ", finalText);
     
     
-    const dayToDatabase = new Date(finalText.date).getDate()
-    const descToDatabase = await todos.join("#####")
+    const dayToDatabase = todos.day
+    const descToDatabase = await todos.todos.join("####")
+
+    // creating todo at database
     const createTodoDatabaseResponse = await fetch(`${process.env.BACKEND_URL}/api/todo/create/${goalId}`, {
       method: "POST",
       headers: {
@@ -198,6 +204,12 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
         completed: false
       }),
     })
+
+    if(!createTodoDatabaseResponse) {
+      return res.status(400).json({
+        message: "error while creating the todo at database"
+      })
+    }
 
     const databaseTodoData = await createTodoDatabaseResponse.json()
     console.log("create database todo response is: ", createTodoDatabaseResponse);
