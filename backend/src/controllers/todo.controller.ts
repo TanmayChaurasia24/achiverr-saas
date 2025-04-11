@@ -25,9 +25,9 @@ export const CreateTodo = async (req: Request, res: Response): Promise<any> => {
 
     const todo = await prisma.todo.create({
       data: {
-        description,
-        goalId,
-        day,
+        description: String(description),
+        goalId: String(goalId),
+        day: String(day),
         completed,
       },
     });
@@ -190,7 +190,7 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
     
     
     const dayToDatabase = todos.day
-    const descToDatabase = await todos.todos.join("####")
+    const descToDatabase = await todos.todos.join("####")  
 
     // creating todo at database
     const createTodoDatabaseResponse = await fetch(`${process.env.BACKEND_URL}/api/todo/create/${goalId}`, {
