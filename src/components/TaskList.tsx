@@ -55,6 +55,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   );
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [isDateOpen, setIsDateOpen] = useState(false);
+  const [isChecked, setisChecked] = useState<Record<string,boolean>>({});
 
   const currentDay = 10;
   // Group tasks by day
@@ -101,10 +102,11 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   }, [tasks]);
 
   const handleTaskCheck = (taskId: string, checked: boolean) => {
-    // console.log("Marking task complete:", taskId, checked);
+    console.log("Marking task complete:", taskId, checked);
 
     // Update in local storage
-    markTaskComplete(taskId, checked);
+    // markTaskComplete(taskId, checked);
+    !checked;
     onTasksUpdated();
   };
 
@@ -200,6 +202,13 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
 
   const handleGenerateTasksForToday = () => {
     generateTasksForDay(currentDay);
+  };
+
+  const handleCheckboxChange = (key: string, checked: boolean) => {
+    setisChecked((prev) => ({
+      ...prev,
+      [key]: checked
+    }))
   };
 
   return (
@@ -301,7 +310,7 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
             .sort(([dayA], [dayB]) => parseInt(dayB) - parseInt(dayA))
             .map(([day, dayTasks]) => (
               <Card
-                key={day}
+                key={Math.random()}
                 className={
                   parseInt(day) === currentDay ? "border-primary/50" : ""
                 }
@@ -325,28 +334,23 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <ul className="space-y-3">
-                    {dayTasks.map((task) => (
-                      <li key={task.id} className="flex space-x-2">
-                        <Checkbox
-                          id={task.id}
-                          checked={task.completed}
-                          // onCheckedChange={(checked) =>
-                          //   // handleTaskCheck(task.id, checked as boolean)
-                          // }
-                          className="mt-0.5"
-                        />
-                        <label
-                          htmlFor={task.id}
-                          className={`text-sm ${
-                            task.completed
-                              ? "line-through text-muted-foreground"
-                              : ""
-                          }`}
-                        >
-                          {task.description}
-                        </label>
-                      </li>
-                    ))}
+                    {dayTasks.map((task) =>
+                      task.description.split("####").map((line, index) => (
+                        <li key={index.toString()} className="flex space-x-2">
+                          <Checkbox // task completion checkbox
+                            id={index.toString()}
+                            checked={!!isChecked[index]}
+                            onCheckedChange={(checked) => handleCheckboxChange(index.toString(), checked as boolean)}
+                            className="mt-0.5"
+                            name={index.toString()}
+                          />
+                          <label key={index} htmlFor={index.toString()}>
+                            {line}
+                            <br />
+                          </label>
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </CardContent>
               </Card>
