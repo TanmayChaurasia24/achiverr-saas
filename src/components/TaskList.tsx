@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import axios from "axios";
+import { Toast } from "./ui/toast";
 
 interface TaskListProps {
   goal: Goal;
@@ -55,7 +56,8 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   );
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [isDateOpen, setIsDateOpen] = useState(false);
-  const [isChecked, setisChecked] = useState<Record<string,boolean>>({});
+  const [isChecked, setisChecked] = useState<Record<string, boolean>>({});
+  const [isAllChecked, setIsAllChecked] = useState<boolean>(false);
 
   const currentDay = 10;
   // Group tasks by day
@@ -66,6 +68,18 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     acc[task.day].push(task);
     return acc;
   }, {});
+
+  useEffect(() => {
+    const isalldone = Object.values(isChecked).every((val) => val === true);
+    console.log("value of is all done is: ", isalldone);
+    console.log("value of ischecked is: ", isChecked);
+
+    if (isalldone) {
+      console.log("all task are done update it to database");
+      setIsAllChecked(true);
+      toast.success("🎉 Well Done!");
+    }
+  }, [isChecked]);
 
   useEffect(() => {
     // Show date picker if no tasks exist
@@ -101,12 +115,28 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
     }
   }, [tasks]);
 
-  const handleTaskCheck = (taskId: string, checked: boolean) => {
+  const handleTaskCheck = async (taskId: string, checked: boolean) => {
     console.log("Marking task complete:", taskId, checked);
+    const todoId = taskId;
 
-    // Update in local storage
-    // markTaskComplete(taskId, checked);
-    !checked;
+    if (!isAllChecked) {
+      toast.error("all task are not checked database updation failed");
+      return;
+    }
+
+    const databaseTaskUpdateResponse = await axios.put(
+      `${import.meta.env.VITE_BACKEND_URL}/api/todo/update/completed/${todoId}`,
+      {
+        completed: checked,
+      }
+    );
+    if(databaseTaskUpdateResponse.status !== 200) {
+      toast.error("todo not updated properly, try again later");
+      return;
+    }
+
+    console.log("database response while updating the todo is: ", databaseTaskUpdateResponse);
+    toast.success("todo updated successfully!")
     onTasksUpdated();
   };
 
@@ -207,8 +237,8 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
   const handleCheckboxChange = (key: string, checked: boolean) => {
     setisChecked((prev) => ({
       ...prev,
-      [key]: checked
-    }))
+      [key]: checked,
+    }));
   };
 
   return (
@@ -340,7 +370,12 @@ export function TaskList({ goal, tasks, onTasksUpdated }: TaskListProps) {
                           <Checkbox // task completion checkbox
                             id={index.toString()}
                             checked={!!isChecked[index]}
-                            onCheckedChange={(checked) => handleCheckboxChange(index.toString(), checked as boolean)}
+                            onCheckedChange={(checked) =>
+                              handleCheckboxChange(
+                                index.toString(),
+                                checked as boolean
+                              )
+                            }
                             className="mt-0.5"
                             name={index.toString()}
                           />

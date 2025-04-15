@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { GoogleGenAI } from "@google/genai";
 import { error } from "console";
+import { AnyTxtRecord } from "dns";
 
 const prisma = new PrismaClient();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -48,14 +49,15 @@ export const CreateTodo = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export const createTodoWithAI = async (req: Request, res: Response): Promise<any> => {
+export const createTodoWithAI = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const { goalId } = req.body;
 
     if (!goalId) {
-      return res
-        .status(400)
-        .json({ message: "goalId are required" });
+      return res.status(400).json({ message: "goalId are required" });
     }
 
     //  Fetch roadmap from your backend
@@ -102,26 +104,28 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
     const completedTodos: any = await prisma.todo.findMany({
       where: { goalId, completed: true },
     });
-    const completedTaskTitles = completedTodos.map((todo: any) => todo.description);
-    
+    const completedTaskTitles = completedTodos.map(
+      (todo: any) => todo.description
+    );
+
     // get all the not completed task from database
     const notCompletedTodos: any = await prisma.todo.findMany({
       where: { goalId, completed: false },
-    })
-    const notcompletedTodos = notCompletedTodos.map((todo: any) => todo.description);
-
+    });
+    const notcompletedTodos = notCompletedTodos.map(
+      (todo: any) => todo.description
+    );
 
     // match current day with roadmap item
     const todayRoadmap = roadmap.find((r) => {
       const range = r.day.replace("Day ", "").split("-");
       const start = parseInt(range[0], 10);
       const end = parseInt(range[1], 10);
-    
+
       return dayDiff >= start && dayDiff <= end;
     });
     console.log(todayRoadmap);
-    
-    
+
     if (!todayRoadmap) {
       return res
         .status(200)
@@ -148,7 +152,9 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
       - Completed todos so far: ${JSON.stringify(completedTaskTitles)}
       - Current day: ${dayDiff}
       - Roadmap duration: ${roadmap.length} days
-      - Objective to be completed according to the roadmap: ${JSON.stringify(remainingTasks)}
+      - Objective to be completed according to the roadmap: ${JSON.stringify(
+        remainingTasks
+      )}
 
       ### Instructions:
       - Break each task into 2–3 actionable subtasks if possible.
@@ -169,52 +175,56 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
       model: "gemini-2.0-flash",
       contents: prompt,
     });
-    const generatedText: string | undefined = AiTodoResponse?.text
-    if(generatedText == undefined) {
+    const generatedText: string | undefined = AiTodoResponse?.text;
+    if (generatedText == undefined) {
       return res.status(400).json({
-        message: "Failed to generate todo"
-      })
+        message: "Failed to generate todo",
+      });
     }
 
-    const finalText: any = generatedText.trim().replace(/^```json|```$/g, '')
+    const finalText: any = generatedText.trim().replace(/^```json|```$/g, "");
 
-    if(!finalText) {
+    if (!finalText) {
       return res.status(400).json({
-        message: "Failed to generate todo"
-      })
+        message: "Failed to generate todo",
+      });
     }
 
-    const todos = JSON.parse(finalText)
+    const todos = JSON.parse(finalText);
     console.log("todos are: ", todos);
     console.log("final text is: ", finalText);
-    
-    
-    const dayToDatabase = todos.day
-    const descToDatabase = await todos.todos.join("####")  
+
+    const dayToDatabase = todos.day;
+    const descToDatabase = await todos.todos.join("####");
 
     // creating todo at database
-    const createTodoDatabaseResponse = await fetch(`${process.env.BACKEND_URL}/api/todo/create/${goalId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        day: dayToDatabase,
-        description: descToDatabase,
-        completed: false
-      }),
-    })
+    const createTodoDatabaseResponse = await fetch(
+      `${process.env.BACKEND_URL}/api/todo/create/${goalId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          day: dayToDatabase,
+          description: descToDatabase,
+          completed: false,
+        }),
+      }
+    );
 
-    if(!createTodoDatabaseResponse) {
+    if (!createTodoDatabaseResponse) {
       return res.status(400).json({
-        message: "error while creating the todo at database"
-      })
+        message: "error while creating the todo at database",
+      });
     }
 
-    const databaseTodoData = await createTodoDatabaseResponse.json()
-    console.log("create database todo response is: ", createTodoDatabaseResponse);
+    const databaseTodoData = await createTodoDatabaseResponse.json();
+    console.log(
+      "create database todo response is: ",
+      createTodoDatabaseResponse
+    );
     console.log("database todo data is: ", databaseTodoData);
-    
 
     console.log("todo created at database is: ", databaseTodoData);
 
@@ -222,7 +232,7 @@ export const createTodoWithAI = async (req: Request, res: Response): Promise<any
       message: "Todos generated successfully",
       date: today.toISOString().split("T")[0],
       todos,
-      createTodoDatabaseResponse
+      createTodoDatabaseResponse,
     });
   } catch (error) {
     console.error("AI TODO generation error:", error);
@@ -273,6 +283,60 @@ export const fetchTodoGoal = async (
   } catch (error) {
     return res.status(500).json({
       message: "error while fetching the todo of the goal",
+      error: error,
+    });
+  }
+};
+
+export const updateTodoDatabase = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { todoId } = req.params;
+    const { completed } = req.body;
+
+    if (!todoId) {
+      return res.status(404).json({
+        message: "todo id is not present",
+      });
+    }
+
+    const tododatabase = await prisma.todo.findFirst({
+      where: {
+        id: todoId,
+      },
+    });
+
+    if (!tododatabase) {
+      return res.status(404).json({
+        message: "todo not found in the database",
+      });
+    }
+
+    console.log("todo fetched from database is: ", tododatabase);
+
+    const updatedTodoDatabaseResponse = await prisma.todo.update({
+      where: {
+        id: todoId,
+      },
+      data: {
+        completed: completed,
+      },
+    });
+
+    if (!updatedTodoDatabaseResponse) {
+      return res.status(404).json({
+        message: "todo not updated in the database",
+      });
+    }
+    return res.status(200).json({
+      message: "todo updated successfully",
+      todo: updateTodoDatabase
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: "error while updating the todo of the goal",
       error: error,
     });
   }
